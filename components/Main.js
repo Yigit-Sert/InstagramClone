@@ -1,34 +1,60 @@
-import React, { Component } from 'react'
-import { View, Text } from "react-native";
+import React, { Component } from "react";
 
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { fetchUser } from '../redux/actions/index';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import FeedScreen from "./main/Feed";
+import ProfileScreen from "./main/Profile";
+import AddScreen from "./main/Add";
 
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { fetchUser } from "../redux/actions/index";
+
+const Tab = createBottomTabNavigator();
 export class Main extends Component {
-    componentDidMount() {
-        this.props.fetchUser();
-    }
+  componentDidMount() {
+    this.props.fetchUser();
+  }
 
   render() {
-    const { currentUser } = this.props;
-    console.log(currentUser);
-    if (currentUser == undefined) {
-        return (
-            <View></View>
-        )
-    }
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>{currentUser.name} is logged in</Text>
-      </View>
-    )
+      <Tab.Navigator>
+        <Tab.Screen
+          name="Feed"
+          component={FeedScreen}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="home" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Add"
+          component={AddScreen}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="plus-box" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="account-circle" color={color} size={size} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    );
   }
 }
 
 const mapStateToProps = (store) => ({
-    currentUser: store.userState.currentUser
+  currentUser: store.userState.currentUser,
 });
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchUser }, dispatch);
+const mapDispatchToProps = (dispatch) =>
+  bindActionCreators({ fetchUser }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);
