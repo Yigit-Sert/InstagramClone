@@ -2,10 +2,13 @@ import React, { Component } from 'react';
 import { View, Button, TextInput } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import firebaseConfig from "./firebaseConfig";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export class Register extends Component {
     constructor(props) {
@@ -20,20 +23,21 @@ export class Register extends Component {
         this.onSignUp = this.onSignUp.bind(this);
     }
 
-    onSignUp() {
+    async onSignUp() {
         const { email, password, name } = this.state;
-        const auth = getAuth(app);
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed in
-                const user = userCredential.user;
-                console.log('User registered successfully:', user);
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.error('Registration error:', errorCode, errorMessage);
-            });
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await setDoc(doc(db, 'users', user.uid), { name, email });
+
+            console.log('User registered successfully:', user);
+        } catch (error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error('Registration error:', errorCode, errorMessage);
+        }
     }
 
     render() {
