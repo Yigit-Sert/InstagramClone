@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
-export default function App() {
+export default function Add({ navigation }) {
   const [facing, setFacing] = useState("back");
   const [cameraPermission, requestPermission] = useCameraPermissions();
   const [camera, setCamera] = useState(null);
@@ -11,8 +11,8 @@ export default function App() {
 
   const takePicture = async () => {
     if (camera) {
-      const photo = await camera.takePictureAsync(null);
-      setImage(photo.uri);
+      const data = await camera.takePictureAsync(null);
+      setImage(data.uri);
     }
   };
 
@@ -72,6 +72,7 @@ export default function App() {
       ></Button>
       <Button title="Take Picture" onPress={() => takePicture()}></Button>
       <Button title="Pick Image From Gallery" onPress={() => pickImage()}></Button>
+      <Button title="Save" onPress={() => navigation.navigate('Save', {image})}></Button>
       {image && <Image source={{ uri: image }} style={{ flex: 1 }} />}
     </View>
   );
