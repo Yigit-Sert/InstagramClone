@@ -1,10 +1,11 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 
 export default function App() {
   const [facing, setFacing] = useState("back");
-  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraPermission, requestPermission] = useCameraPermissions();
   const [camera, setCamera] = useState(null);
   const [image, setImage] = useState(null);
 
@@ -15,17 +16,33 @@ export default function App() {
     }
   };
 
-  if (!permission) {
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  if (!cameraPermission) {
     // Camera permissions are still loading.
     return <View />;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted) {
     // Camera permissions are not granted yet.
     return (
       <View style={styles.container}>
         <Text style={{ textAlign: "center" }}>
-          We need your permission to show the camera
+          We need your camera permission to show the camera
         </Text>
         <Button onPress={requestPermission} title="grant permission" />
       </View>
@@ -54,6 +71,7 @@ export default function App() {
         onPress={toggleCameraFacing}
       ></Button>
       <Button title="Take Picture" onPress={() => takePicture()}></Button>
+      <Button title="Pick Image From Gallery" onPress={() => pickImage()}></Button>
       {image && <Image source={{ uri: image }} style={{ flex: 1 }} />}
     </View>
   );
