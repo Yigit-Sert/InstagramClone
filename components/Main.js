@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import FeedScreen from "./main/Feed";
+import SearchScreen from "./main/Search";
 import ProfileScreen from "./main/Profile";
 
 import { connect } from "react-redux";
@@ -29,6 +30,16 @@ export class Main extends Component {
           options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="home" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Search"
+          component={SearchScreen}
+          navigation={this.props.navigation}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="magnify" color={color} size={size} />
             ),
           }}
         />
