@@ -1,6 +1,6 @@
-import { USER_STATE_CHANGE } from "../constants/index";
+import { USER_STATE_CHANGE, USER_POSTS_STATE_CHANGE } from "../constants/index";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { collection, getFirestore, doc, getDocs, getDoc, query, orderBy } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../../components/auth/firebaseConfig";
 
@@ -23,6 +23,31 @@ export function fetchUser() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+      }
+    } else {
+      console.log("No user is currently signed in.");
+    }
+  };
+}
+
+export function fetchUserPosts() {
+  return async (dispatch) => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const userPostsCollection = collection(doc(collection(db, "posts"), user.uid), "userPosts");
+        const userPostsQuery = query(userPostsCollection, orderBy("creation", "asc"));
+        const userPostsQuerySnapshot = await getDocs(userPostsQuery);
+        
+        if (!userPostsQuerySnapshot.empty) {
+          const posts = userPostsQuerySnapshot.docs.map(doc => doc.data());
+          dispatch({ type: USER_POSTS_STATE_CHANGE, posts });
+          console.log("User posts:", posts);
+        } else {
+          console.log("User has no posts.");
+        }
+      } catch (error) {
+        console.error("Error fetching user posts:", error);
       }
     } else {
       console.log("No user is currently signed in.");
