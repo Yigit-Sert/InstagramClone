@@ -10,6 +10,14 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { fetchUser, fetchUserPosts } from "../redux/actions/index";
 
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import firebaseConfig from "../components/auth/firebaseConfig";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 const Tab = createMaterialBottomTabNavigator();
 
 const EmptyScreen = () => {
@@ -62,6 +70,13 @@ export class Main extends Component {
         <Tab.Screen
           name="Profile"
           component={ProfileScreen}
+          listeners={({ navigation }) => ({
+            tabPress: (event) => {
+              event.preventDefault();
+              navigation.navigate("Profile", {uid: auth.currentUser.uid});
+            },
+          
+          })}
           options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="account-circle" color={color} size={size} />
