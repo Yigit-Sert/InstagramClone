@@ -35,12 +35,33 @@ export function fetchUserPosts() {
     const user = auth.currentUser;
     if (user) {
       try {
+        console.log("Current user:", user.uid);
+
+        // Reference to the user's "posts" collection under "userPosts"
         const userPostsCollection = collection(doc(collection(db, "posts"), user.uid), "userPosts");
+        console.log("User posts collection path:", userPostsCollection.path);
+
+        // Create a query to order the posts by the "creation" field in ascending order
         const userPostsQuery = query(userPostsCollection, orderBy("creation", "asc"));
+
+        // Execute the query
         const userPostsQuerySnapshot = await getDocs(userPostsQuery);
-        
+
+        console.log("Query snapshot size:", userPostsQuerySnapshot.size);
+
         if (!userPostsQuerySnapshot.empty) {
-          const posts = userPostsQuerySnapshot.docs.map(doc => doc.data());
+          // Map the documents to their data and include the document ID
+          const posts = userPostsQuerySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const id = doc.id;
+            // Convert Firestore Timestamp to a serializable format
+            if (data.creation) {
+              data.creation = data.creation.toDate().toISOString();
+            }
+            return { id, ...data };
+          });
+
+          // Dispatch the action to update the state with the fetched posts
           dispatch({ type: USER_POSTS_STATE_CHANGE, posts });
           console.log("User posts:", posts);
         } else {
@@ -54,3 +75,4 @@ export function fetchUserPosts() {
     }
   };
 }
+
