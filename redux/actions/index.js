@@ -1,4 +1,4 @@
-import { USER_STATE_CHANGE, USER_POSTS_STATE_CHANGE } from "../constants/index";
+import { USER_STATE_CHANGE, USER_POSTS_STATE_CHANGE, USER_FOLLOWING_STATE_CHANGE } from "../constants/index";
 import { initializeApp } from "firebase/app";
 import { collection, getFirestore, doc, getDocs, getDoc, query, orderBy } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -76,3 +76,37 @@ export function fetchUserPosts() {
   };
 }
 
+export function fetchUserFollowing() {
+  return async (dispatch) => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        // Reference to the "following" collection under the current user's ID
+        const followingCollection = collection(doc(db, "following", user.uid), "userFollowing");
+
+        // Execute the query
+        const followingCollectionSnapshot = await getDocs(followingCollection);
+
+        console.log("Following collection snapshot size:", followingCollectionSnapshot.size);
+
+        if (!followingCollectionSnapshot.empty) {
+          // Map the documents to their data and include the document ID
+          const following = followingCollectionSnapshot.docs.map(doc => {
+            const id = doc.id;
+            return id;
+          });
+
+          // Dispatch the action to update the state with the fetched following
+          dispatch({ type: USER_FOLLOWING_STATE_CHANGE, following });
+          console.log("Following:", following);
+        } else {
+          console.log("User is not following anyone.");
+        }
+      } catch (error) {
+        console.error("Error fetching user following:", error);
+      }
+    } else {
+      console.log("No user is currently signed in.");
+    }
+  };
+}
