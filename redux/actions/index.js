@@ -1,6 +1,20 @@
-import { USER_STATE_CHANGE, USER_POSTS_STATE_CHANGE, USER_FOLLOWING_STATE_CHANGE } from "../constants/index";
+import {
+  USER_STATE_CHANGE,
+  USER_POSTS_STATE_CHANGE,
+  USER_FOLLOWING_STATE_CHANGE,
+  USERS_DATA_STATE_CHANGE,
+  USERS_POSTS_STATE_CHANGE,
+} from "../constants/index";
 import { initializeApp } from "firebase/app";
-import { collection, getFirestore, doc, getDocs, getDoc, query, orderBy } from "firebase/firestore";
+import {
+  collection,
+  getFirestore,
+  doc,
+  getDocs,
+  getDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../../components/auth/firebaseConfig";
 
@@ -38,11 +52,17 @@ export function fetchUserPosts() {
         console.log("Current user:", user.uid);
 
         // Reference to the user's "posts" collection under "userPosts"
-        const userPostsCollection = collection(doc(collection(db, "posts"), user.uid), "userPosts");
+        const userPostsCollection = collection(
+          doc(collection(db, "posts"), user.uid),
+          "userPosts"
+        );
         console.log("User posts collection path:", userPostsCollection.path);
 
         // Create a query to order the posts by the "creation" field in ascending order
-        const userPostsQuery = query(userPostsCollection, orderBy("creation", "asc"));
+        const userPostsQuery = query(
+          userPostsCollection,
+          orderBy("creation", "asc")
+        );
 
         // Execute the query
         const userPostsQuerySnapshot = await getDocs(userPostsQuery);
@@ -51,7 +71,7 @@ export function fetchUserPosts() {
 
         if (!userPostsQuerySnapshot.empty) {
           // Map the documents to their data and include the document ID
-          const posts = userPostsQuerySnapshot.docs.map(doc => {
+          const posts = userPostsQuerySnapshot.docs.map((doc) => {
             const data = doc.data();
             const id = doc.id;
             // Convert Firestore Timestamp to a serializable format
@@ -82,16 +102,22 @@ export function fetchUserFollowing() {
     if (user) {
       try {
         // Reference to the "following" collection under the current user's ID
-        const followingCollection = collection(doc(db, "following", user.uid), "userFollowing");
+        const followingCollection = collection(
+          doc(db, "following", user.uid),
+          "userFollowing"
+        );
 
         // Execute the query
         const followingCollectionSnapshot = await getDocs(followingCollection);
 
-        console.log("Following collection snapshot size:", followingCollectionSnapshot.size);
+        console.log(
+          "Following collection snapshot size:",
+          followingCollectionSnapshot.size
+        );
 
         if (!followingCollectionSnapshot.empty) {
           // Map the documents to their data and include the document ID
-          const following = followingCollectionSnapshot.docs.map(doc => {
+          const following = followingCollectionSnapshot.docs.map((doc) => {
             const id = doc.id;
             return id;
           });
@@ -99,6 +125,9 @@ export function fetchUserFollowing() {
           // Dispatch the action to update the state with the fetched following
           dispatch({ type: USER_FOLLOWING_STATE_CHANGE, following });
           console.log("Following:", following);
+          for (let i = 0; i < following.length; i++) {
+            dispatch(fetchUsersData(following[i]));
+          }
         } else {
           console.log("User is not following anyone.");
         }
@@ -107,6 +136,52 @@ export function fetchUserFollowing() {
       }
     } else {
       console.log("No user is currently signed in.");
+    }
+  };
+}
+
+export function fetchUsersData(uid) {
+  return async (dispatch, getState) => {
+    const found = getState().usersState.users.some(el => el.uid === uid);
+    if (!found) {
+      try {
+        const userDocRef = doc(db, "users", uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          let user = userDoc.data();
+          user.uid = userDoc.id;
+
+          dispatch({ type: USERS_DATA_STATE_CHANGE, user });
+          dispatch(fetchUsersFollowingPosts(user.uid));
+        } else {
+          console.log('User does not exist');
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    }
+  };
+}
+
+export function fetchUsersFollowingPosts(uid) {
+  return async (dispatch, getState) => {
+    try {
+      const userPostsCollectionRef = collection(doc(db, "posts", uid), "userPosts");
+      const userPostsQuery = query(userPostsCollectionRef, orderBy("creation", "asc"));
+      const userPostsQuerySnapshot = await getDocs(userPostsQuery);
+
+      const user = getState().usersState.users.find(el => el.uid === uid);
+      let posts = userPostsQuerySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const id = doc.id;
+        const creation = data.creation.toDate().toISOString();
+
+        return { id, ...data, creation, user };
+      });
+
+      dispatch({ type: USERS_POSTS_STATE_CHANGE, posts, uid });
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
     }
   };
 }
