@@ -4,7 +4,7 @@ import {
   USER_FOLLOWING_STATE_CHANGE,
   USERS_DATA_STATE_CHANGE,
   USERS_POSTS_STATE_CHANGE,
-  CLEAR_DATA
+  CLEAR_DATA,
 } from "../constants/index";
 import { initializeApp } from "firebase/app";
 import {
@@ -37,7 +37,6 @@ export function fetchUser() {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          // console.log("User data:", userDoc.data());
           dispatch({ type: USER_STATE_CHANGE, currentUser: userDoc.data() });
         } else {
           console.log("User does not exist.");
@@ -81,7 +80,7 @@ export function fetchUserPosts() {
           const posts = userPostsQuerySnapshot.docs.map((doc) => {
             const data = doc.data();
             const id = doc.id;
-            // Convert Firestore Timestamp to a serializable format
+            // Convert Timestamp to a serializable format
             if (data.creation) {
               data.creation = data.creation.toDate().toISOString();
             }
@@ -124,16 +123,15 @@ export function fetchUserFollowing() {
 
         if (!followingCollectionSnapshot.empty) {
           // Map the documents to their data and include the document ID
-          const following = followingCollectionSnapshot.docs.map((doc) => {
-            const id = doc.id;
-            return id;
-          });
+          const following = followingCollectionSnapshot.docs.map(
+            (doc) => doc.id
+          );
 
           // Dispatch the action to update the state with the fetched following
           dispatch({ type: USER_FOLLOWING_STATE_CHANGE, following });
           console.log("Following:", following);
           for (let i = 0; i < following.length; i++) {
-            dispatch(fetchUsersData(following[i]));
+            dispatch(fetchUsersData(following[i], true));
           }
         } else {
           console.log("User is not following anyone.");
@@ -147,9 +145,9 @@ export function fetchUserFollowing() {
   };
 }
 
-export function fetchUsersData(uid) {
+export function fetchUsersData(uid, getPosts) {
   return async (dispatch, getState) => {
-    const found = getState().usersState.users.some(el => el.uid === uid);
+    const found = getState().usersState.users.some((el) => el.uid === uid);
     if (!found) {
       try {
         const userDocRef = doc(db, "users", uid);
@@ -159,9 +157,12 @@ export function fetchUsersData(uid) {
           user.uid = userDoc.id;
 
           dispatch({ type: USERS_DATA_STATE_CHANGE, user });
-          dispatch(fetchUsersFollowingPosts(user.uid));
+
+          if (getPosts) {
+            dispatch(fetchUsersFollowingPosts(uid));
+          }
         } else {
-          console.log('User does not exist');
+          console.log("User does not exist");
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -173,12 +174,18 @@ export function fetchUsersData(uid) {
 export function fetchUsersFollowingPosts(uid) {
   return async (dispatch, getState) => {
     try {
-      const userPostsCollectionRef = collection(doc(db, "posts", uid), "userPosts");
-      const userPostsQuery = query(userPostsCollectionRef, orderBy("creation", "asc"));
+      const userPostsCollectionRef = collection(
+        doc(db, "posts", uid),
+        "userPosts"
+      );
+      const userPostsQuery = query(
+        userPostsCollectionRef,
+        orderBy("creation", "asc")
+      );
       const userPostsQuerySnapshot = await getDocs(userPostsQuery);
 
-      const user = getState().usersState.users.find(el => el.uid === uid);
-      let posts = userPostsQuerySnapshot.docs.map(doc => {
+      const user = getState().usersState.users.find((el) => el.uid === uid);
+      let posts = userPostsQuerySnapshot.docs.map((doc) => {
         const data = doc.data();
         const id = doc.id;
         const creation = data.creation.toDate().toISOString();

@@ -9,8 +9,8 @@ function Feed(props) {
     let postsArray = [];
     if (
       props.following &&
-      props.usersLoaded !== undefined &&
-      props.usersLoaded === props.following.length
+      props.usersFollowingLoaded !== undefined &&
+      props.usersFollowingLoaded === props.following.length
     ) {
       for (let i = 0; i < props.following.length; i++) {
         const user = props.users.find((el) => el.uid === props.following[i]);
@@ -22,7 +22,7 @@ function Feed(props) {
       postsArray.sort((x, y) => x.creation - y.creation);
       setPosts(postsArray);
     }
-  }, [props.usersLoaded, props.following, props.users]);
+  }, [props.usersFollowingLoaded, props.following, props.users]);
 
   return (
     <View style={styles.container}>
@@ -73,7 +73,7 @@ const mapStateToProps = (store) => ({
   currentUser: store.userState.currentUser,
   following: store.userState.following,
   users: store.usersState.users,
-  usersLoaded: store.usersState.usersLoaded,
+  usersFollowingLoaded: store.usersState.usersFollowingLoaded,
 });
 
 export default connect(mapStateToProps, null)(Feed);

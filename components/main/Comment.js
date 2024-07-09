@@ -1,31 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Button, FlatList, TextInput } from "react-native";
-
-// firebase
 import { initializeApp } from "firebase/app";
-import {
-  collection,
-  getFirestore,
-  addDoc,
-  doc,
-  getDocs,
-  getDoc,
-  query,
-  orderBy,
-} from "firebase/firestore";
+import { collection, getFirestore, addDoc, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../auth/firebaseConfig";
-// Initialize Firebase
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { fetchUsersData } from "../../redux/actions";
+
+// Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-// firebase
 
-export default function Comment(props) {
+function Comment(props) {
   const [comments, setComments] = useState([]);
   const [postId, setPostId] = useState("");
   const [text, setText] = useState("");
 
   useEffect(() => {
+    const matchUserToComment = (comments) => {
+      comments.forEach((comment) => {
+        if (!comment.user) {
+          const user = props.users.find((x) => x.uid === comment.userId);
+          if (user) {
+            comment.user = user;
+          } else {
+            props.fetchUsersData(comment.userId, false);
+          }
+        }
+      });
+      setComments(comments);
+    };
+
     const fetchComments = async () => {
       const commentsCollectionRef = collection(
         db,
@@ -38,23 +44,23 @@ export default function Comment(props) {
 
       try {
         const snapshot = await getDocs(commentsCollectionRef);
-        let comments = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          const id = doc.id;
-          return { id, ...data };
-        });
-        setComments(comments);
+        const comments = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        matchUserToComment(comments);
       } catch (error) {
         console.error("Error fetching comments: ", error);
       }
-
       setPostId(props.route.params.postId);
     };
 
     if (props.route.params.postId !== postId) {
       fetchComments();
+    } else {
+      matchUserToComment(comments);
     }
-  }, [props.route.params.postId]);
+  }, [props.route.params.postId, props.users]);
 
   const onCommentSend = async () => {
     const user = getAuth().currentUser;
@@ -79,8 +85,7 @@ export default function Comment(props) {
     } catch (error) {
       console.error("Error adding comment: ", error);
     }
-  }
-
+  };
 
   return (
     <View>
@@ -88,8 +93,10 @@ export default function Comment(props) {
         numColumns={1}
         horizontal={false}
         data={comments}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View>
+            {item.user ? <Text>{item.user.name}</Text> : null}
             <Text>{item.text}</Text>
           </View>
         )}
@@ -99,11 +106,17 @@ export default function Comment(props) {
           placeholder="Make a comment..."
           onChangeText={(text) => setText(text)}
         />
-        <Button 
-          onPress={() => onCommentSend()}
-          title="Send"
-        />
+        <Button onPress={onCommentSend} title="Send" />
       </View>
     </View>
   );
 }
+
+const mapStateToProps = (store) => ({
+  users: store.usersState.users,
+});
+
+const mapDispatchToProps = (dispatch) =>
+  bindActionCreators({ fetchUsersData }, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Comment);
