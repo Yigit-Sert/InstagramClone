@@ -79,23 +79,38 @@ function Profile(props) {
     if ((props.following ?? []).indexOf(uid) > -1) {
       setFollowing(true);
     } else {
-      setFollowing(false);      
+      setFollowing(false);
     }
-
   }, [props.route.params, props.currentUser, props.posts, props.following]);
 
   const { currentUser, posts } = props;
   console.log({ currentUser, posts });
 
   const onFollow = () => {
-    const followingRef = doc(db, "following", auth.currentUser.uid, "userFollowing", props.route.params.uid);
+    const followingRef = doc(
+      db,
+      "following",
+      auth.currentUser.uid,
+      "userFollowing",
+      props.route.params.uid
+    );
     setDoc(followingRef, {});
   };
 
   const onUnfollow = () => {
-    const followingRef = doc(db, "following", auth.currentUser.uid, "userFollowing", props.route.params.uid);
+    const followingRef = doc(
+      db,
+      "following",
+      auth.currentUser.uid,
+      "userFollowing",
+      props.route.params.uid
+    );
     deleteDoc(followingRef);
   };
+
+  const onLogout = () => {
+    auth.signOut();
+  }
 
   if (user === null) {
     return <View />;
@@ -125,7 +140,14 @@ function Profile(props) {
               />
             )}
           </View>
-        ) : null}
+        ) :
+          <Button
+            title="Logout"
+            onPress={() => {
+              onLogout();
+            }}
+          />
+        }
       </View>
       <View style={styles.containerGallery}>
         <FlatList
