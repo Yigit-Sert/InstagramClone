@@ -6,6 +6,7 @@ import { initializeApp } from "firebase/app";
 import {
   collection,
   getFirestore,
+  addDoc,
   doc,
   getDocs,
   getDoc,
@@ -17,7 +18,7 @@ import firebaseConfig from "../auth/firebaseConfig";
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-// firebase     
+// firebase
 
 export default function Comment(props) {
   const [comments, setComments] = useState([]);
@@ -55,9 +56,35 @@ export default function Comment(props) {
     }
   }, [props.route.params.postId]);
 
+  const onCommentSend = async () => {
+    const user = getAuth().currentUser;
+    const comment = {
+      text,
+      userId: user.uid,
+      username: user.displayName,
+    };
+
+    const commentsCollectionRef = collection(
+      db,
+      "posts",
+      props.route.params.uid,
+      "userPosts",
+      props.route.params.postId,
+      "comments"
+    );
+
+    try {
+      await addDoc(commentsCollectionRef, comment);
+      setComments([...comments, comment]);
+    } catch (error) {
+      console.error("Error adding comment: ", error);
+    }
+  }
+
+
   return (
-  <View>
-    <FlatList 
+    <View>
+      <FlatList
         numColumns={1}
         horizontal={false}
         data={comments}
@@ -66,7 +93,17 @@ export default function Comment(props) {
             <Text>{item.text}</Text>
           </View>
         )}
-    />
-  </View>
-  )
+      />
+      <View>
+        <TextInput
+          placeholder="Make a comment..."
+          onChangeText={(text) => setText(text)}
+        />
+        <Button 
+          onPress={() => onCommentSend()}
+          title="Send"
+        />
+      </View>
+    </View>
+  );
 }
