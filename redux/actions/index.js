@@ -4,6 +4,7 @@ import {
   USER_FOLLOWING_STATE_CHANGE,
   USERS_DATA_STATE_CHANGE,
   USERS_POSTS_STATE_CHANGE,
+  USERS_LIKES_STATE_CHANGE,
   CLEAR_DATA,
 } from "../constants/index";
 import { initializeApp } from "firebase/app";
@@ -193,9 +194,38 @@ export function fetchUsersFollowingPosts(uid) {
         return { id, ...data, creation, user };
       });
 
+      for (let i = 0; i < posts.length; i++) {
+        dispatch(fetchUsersFollowingLikes(uid, posts[i].id));
+      }
+
       dispatch({ type: USERS_POSTS_STATE_CHANGE, posts, uid });
     } catch (error) {
       console.error("Error fetching user posts:", error);
+    }
+  };
+}
+
+export function fetchUsersFollowingLikes(uid, postId) {
+  return async (dispatch, getState) => {
+    try {
+      const likesCollectionRef = collection(db, `posts/${uid}/userPosts/${postId}/likes`);
+      const likesQuerySnapshot = await getDocs(likesCollectionRef);
+
+      let currentUserLike = false;
+
+      if (!likesQuerySnapshot.empty) {
+        // Check if the current user has liked the post
+        likesQuerySnapshot.forEach(doc => {
+          if (doc.id === auth.currentUser.uid) {
+            currentUserLike = true;
+          }
+        });
+      }
+
+      dispatch({ type: USERS_LIKES_STATE_CHANGE, postId, currentUserLike });
+      console.log("User likes:", currentUserLike);
+    } catch (error) {
+      console.error("Error fetching user likes:", error);
     }
   };
 }

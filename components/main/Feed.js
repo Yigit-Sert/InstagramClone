@@ -1,28 +1,90 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Image, FlatList } from "react-native";
+import { StyleSheet, View, Text, Image, FlatList, Button } from "react-native";
 import { connect } from "react-redux";
+import { initializeApp } from "firebase/app";
+import {
+  collection,
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  getDoc,
+  query,
+  orderBy,
+  deleteDoc,
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import firebaseConfig from "../auth/firebaseConfig";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 function Feed(props) {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    let postsArray = [];
     if (
       props.following &&
       props.usersFollowingLoaded !== undefined &&
-      props.usersFollowingLoaded === props.following.length
+      props.usersFollowingLoaded === props.following.length &&
+      props.following.length !== 0
     ) {
-      for (let i = 0; i < props.following.length; i++) {
-        const user = props.users.find((el) => el.uid === props.following[i]);
-        if (user && user.posts) {
-          postsArray = [...postsArray, ...user.posts];
-        }
-      }
-
-      postsArray.sort((x, y) => x.creation - y.creation);
-      setPosts(postsArray);
+      props.feed.sort((x, y) => x.creation - y.creation);
+      setPosts(props.feed);
     }
-  }, [props.usersFollowingLoaded, props.following, props.users]);
+  }, [props.usersFollowingLoaded, props.following, props.users, props.feed]);
+
+  const onLikePress = async (uid, postId) => {
+    const currentUserUid = auth.currentUser.uid;
+
+    try {
+      // Reference to the like document
+      const likeRef = doc(
+        db,
+        "posts",
+        uid,
+        "userPosts",
+        postId,
+        "likes",
+        currentUserUid
+      );
+
+      // Set the like document with an empty object
+      await setDoc(likeRef, {});
+
+      console.log("Like successfully added!");
+    } catch (error) {
+      console.error("Error adding like: ", error);
+      // Handle error
+    }
+  };
+
+  const onDislikePress = (uid, postId) => {
+    const currentUserUid = auth.currentUser.uid;
+
+    // Reference to the like document
+    const likeRef = doc(
+      db,
+      "posts",
+      uid,
+      "userPosts",
+      postId,
+      "likes",
+      currentUserUid
+    );
+
+    // Delete the like document
+    deleteDoc(likeRef)
+      .then(() => {
+      console.log("Like successfully removed!");
+      })
+      .catch((error) => {
+      console.error("Error removing like: ", error);
+      // Handle error
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -35,9 +97,23 @@ function Feed(props) {
             <View style={styles.containerImage}>
               <Text style={styles.container}>{item.user.name}</Text>
               <Image style={styles.image} source={{ uri: item.downloadURL }} />
+              {item.currentUserLike ? (
+                <Button
+                  title="Dislike"
+                  onPress={() => onDislikePress(item.user.uid, item.id)}
+                />
+              ) : (
+                <Button
+                  title="Like"
+                  onPress={() => onLikePress(item.user.uid, item.id)}
+                />
+              )}
               <Text
                 onPress={() =>
-                  props.navigation.navigate("Comment", { postId: item.id, uid: item.user.uid})
+                  props.navigation.navigate("Comment", {
+                    postId: item.id,
+                    uid: item.user.uid,
+                  })
                 }
               >
                 View Comments...
@@ -72,7 +148,7 @@ const styles = StyleSheet.create({
 const mapStateToProps = (store) => ({
   currentUser: store.userState.currentUser,
   following: store.userState.following,
-  users: store.usersState.users,
+  feed: store.usersState.feed,
   usersFollowingLoaded: store.usersState.usersFollowingLoaded,
 });
 
