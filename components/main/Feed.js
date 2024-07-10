@@ -9,6 +9,7 @@ import {
   setDoc,
   getDocs,
   getDoc,
+  runTransaction,
   query,
   orderBy,
   deleteDoc,
@@ -38,7 +39,7 @@ function Feed(props) {
 
   const onLikePress = async (uid, postId) => {
     const currentUserUid = auth.currentUser.uid;
-
+  
     try {
       // Reference to the like document
       const likeRef = doc(
@@ -50,20 +51,38 @@ function Feed(props) {
         "likes",
         currentUserUid
       );
-
-      // Set the like document with an empty object
-      await setDoc(likeRef, {});
-
-      console.log("Like successfully added!");
+  
+      // Reference to the post document
+      const postRef = doc(db, "posts", uid, "userPosts", postId);
+  
+      // Use a transaction to set the like and update the likeCounter
+      await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Post does not exist!";
+        }
+  
+        // Get the current likeCounter value or initialize it to 0
+        const currentLikeCounter = postDoc.data().likeCounter || 0;
+        const newLikeCounter = currentLikeCounter + 1;
+  
+        // Set the like document
+        transaction.set(likeRef, {});
+  
+        // Update the likeCounter field
+        transaction.update(postRef, { likeCounter: newLikeCounter });
+      });
+  
+      console.log("Like successfully added and likeCounter updated!");
     } catch (error) {
       console.error("Error adding like: ", error);
       // Handle error
     }
   };
-
-  const onDislikePress = (uid, postId) => {
+  
+  const onDislikePress = async (uid, postId) => {
     const currentUserUid = auth.currentUser.uid;
-
+  
     // Reference to the like document
     const likeRef = doc(
       db,
@@ -74,17 +93,36 @@ function Feed(props) {
       "likes",
       currentUserUid
     );
-
-    // Delete the like document
-    deleteDoc(likeRef)
-      .then(() => {
-      console.log("Like successfully removed!");
-      })
-      .catch((error) => {
+  
+    // Reference to the post document
+    const postRef = doc(db, "posts", uid, "userPosts", postId);
+  
+    try {
+      // Use a transaction to delete the like and update the likeCounter
+      await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Post does not exist!";
+        }
+  
+        // Get the current likeCounter value or initialize it to 0
+        const currentLikeCounter = postDoc.data().likeCounter || 0;
+        const newLikeCounter = currentLikeCounter - 1;
+  
+        // Delete the like document
+        transaction.delete(likeRef);
+  
+        // Update the likeCounter field
+        transaction.update(postRef, { likeCounter: newLikeCounter });
+      });
+  
+      console.log("Like successfully removed and likeCounter updated!");
+    } catch (error) {
       console.error("Error removing like: ", error);
       // Handle error
-      });
+    }
   };
+  
 
   return (
     <View style={styles.container}>
