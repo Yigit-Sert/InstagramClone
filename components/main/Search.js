@@ -1,11 +1,6 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
+import { View, FlatList } from "react-native";
+import { TextInput, List, Divider } from "react-native-paper"; // React Native Paper bileşenleri
 
 import { initializeApp } from "firebase/app";
 import {
@@ -38,25 +33,25 @@ export default function Search(props) {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <TextInput
-        placeholder="Search..."
+        label="Search"
+        placeholder="Search users..."
         onChangeText={(search) => fetchUsers(search)}
+        style={{ margin: 10 }}
       />
       <FlatList
-        numColumns={1}
-        horizontal={false}
         data={users}
+        keyExtractor={(item) => item.id}
+        ItemSeparatorComponent={() => <Divider />}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <List.Item
+            title={item.name}
             onPress={() =>
               props.navigation.navigate("Profile", { uid: item.id })
             }
-          >
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
+          />
         )}
-        keyExtractor={(item) => item.id}
       />
     </View>
   );

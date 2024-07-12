@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, FlatList, TextInput } from "react-native";
+import { View, FlatList } from "react-native";
 import { initializeApp } from "firebase/app";
 import { collection, getFirestore, addDoc, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -7,6 +7,7 @@ import firebaseConfig from "../auth/firebaseConfig";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { fetchUsersData } from "../../redux/actions";
+import { Card, TextInput, Button, Text } from 'react-native-paper';
 
 // Firebase
 const app = initializeApp(firebaseConfig);
@@ -82,33 +83,40 @@ function Comment(props) {
     try {
       await addDoc(commentsCollectionRef, comment);
       setComments([...comments, comment]);
+      setText(""); // Clear the input field after sending the comment
     } catch (error) {
       console.error("Error adding comment: ", error);
     }
   };
 
   return (
-    <View>
-      <FlatList
-        numColumns={1}
-        horizontal={false}
-        data={comments}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View>
-            {item.user ? <Text>{item.user.name}</Text> : null}
-            <Text>{item.text}</Text>
-          </View>
-        )}
-      />
-      <View>
-        <TextInput
-          placeholder="Make a comment..."
-          onChangeText={(text) => setText(text)}
+    <Card>
+      <Card.Content>
+        <FlatList
+          numColumns={1}
+          horizontal={false}
+          data={comments}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={{ marginBottom: 10 }}>
+              {item.user ? <Text>{item.user.name}</Text> : null}
+              <Text>{item.text}</Text>
+            </View>
+          )}
         />
-        <Button onPress={onCommentSend} title="Send" />
-      </View>
-    </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TextInput
+            style={{ flex: 1, marginRight: 10 }}
+            placeholder="Make a comment..."
+            value={text}
+            onChangeText={(text) => setText(text)}
+          />
+          <Button mode="contained" onPress={onCommentSend}>
+            Send
+          </Button>
+        </View>
+      </Card.Content>
+    </Card>
   );
 }
 

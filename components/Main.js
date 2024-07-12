@@ -38,9 +38,7 @@ export class Main extends Component {
           name="Feed"
           component={FeedScreen}
           options={{
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="home" color={color} size={size} />
-            ),
+            tabBarIcon: 'home'
           }}
         />
         <Tab.Screen
@@ -48,9 +46,7 @@ export class Main extends Component {
           component={SearchScreen}
           navigation={this.props.navigation}
           options={{
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="magnify" color={color} size={size} />
-            ),
+            tabBarIcon: 'magnify'
           }}
         />
         <Tab.Screen
@@ -64,9 +60,7 @@ export class Main extends Component {
           
           })}
           options={{
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="plus-box" color={color} size={size} />
-            ),
+            tabBarIcon: 'plus-box'
           }}
         />
         <Tab.Screen
@@ -80,9 +74,7 @@ export class Main extends Component {
           
           })}
           options={{
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="account-circle" color={color} size={size} />
-            ),
+            tabBarIcon: 'account-circle'
           }}
         />
       </Tab.Navigator>
