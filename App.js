@@ -10,6 +10,8 @@ import MainScreen from "./components/Main";
 import AddScreen from "./components/main/Add";
 import SaveScreen from "./components/main/Save";
 import CommentScreen from "./components/main/Comment";
+import FollowingListScreen from "./components/main/FollowingList";
+import PrivateChatScreen from "./components/main/PrivateChat";
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -102,6 +104,8 @@ export class App extends Component {
               component={CommentScreen}
               navigation={this.props.navigation}
             />
+            <Stack.Screen name="FollowingList" component={FollowingListScreen} />
+            <Stack.Screen name="PrivateChat" component={PrivateChatScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>

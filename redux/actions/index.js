@@ -6,6 +6,9 @@ import {
   USERS_POSTS_STATE_CHANGE,
   USERS_LIKES_STATE_CHANGE,
   CLEAR_DATA,
+  FETCH_MESSAGES,
+  SEND_MESSAGE,
+  FETCH_FOLLOWING_USERS,
 } from "../constants/index";
 import { initializeApp } from "firebase/app";
 import {
@@ -16,6 +19,8 @@ import {
   getDoc,
   query,
   orderBy,
+  addDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../../components/auth/firebaseConfig";
@@ -226,6 +231,61 @@ export function fetchUsersFollowingLikes(uid, postId) {
       console.log("User likes:", currentUserLike);
     } catch (error) {
       console.error("Error fetching user likes:", error);
+    }
+  };
+}
+
+
+
+export function sendMessage(text, userId) {
+  return async (dispatch) => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const message = {
+          text,
+          from: user.uid,
+          to: userId,
+          createdAt: new Date().toISOString(), // Ensure serialization
+        };
+
+        await addDoc(collection(db, `chats/${userId}/messages`), message);
+        dispatch({ type: SEND_MESSAGE, message });
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    } else {
+      console.log('No user is currently signed in.');
+    }
+  };
+}
+
+
+export function fetchFollowingUsers() {
+  return async (dispatch) => {
+    const user = getAuth().currentUser;
+    if (user) {
+      try {
+        const followingCollectionRef = collection(db, `following/${user.uid}/userFollowing`);
+        const followingSnapshot = await getDocs(followingCollectionRef);
+
+        if (!followingSnapshot.empty) {
+          let followingUsers = [];
+
+          for (const docRef of followingSnapshot.docs) {
+            const userDoc = await getDoc(doc(db, "users", docRef.id));
+            if (userDoc.exists()) {
+              followingUsers.push({ uid: userDoc.id, name: userDoc.data().name });
+            }
+          }
+
+          dispatch({ type: FETCH_FOLLOWING_USERS, followingUsers });
+        } else {
+          console.log("User is not following anyone.");
+        }
+      } catch (error) {
+        console.error("Error fetching following users:", error);
+      }
     }
   };
 }

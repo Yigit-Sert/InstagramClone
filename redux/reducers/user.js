@@ -3,11 +3,14 @@ import {
   USER_POSTS_STATE_CHANGE,
   USER_FOLLOWING_STATE_CHANGE,
   CLEAR_DATA,
+  FETCH_FOLLOWING_USERS,
 } from "../constants/index";
 
 const initialState = {
   currentUser: null,
   posts: [],
+  following: [],
+  followingUsers: [],
 };
 
 export const user = (state = initialState, action) => {
@@ -28,6 +31,12 @@ export const user = (state = initialState, action) => {
       return {
         ...state,
         following: action.following,
+      };
+
+    case FETCH_FOLLOWING_USERS:
+      return {
+        ...state,
+        followingUsers: action.followingUsers,
       };
 
     case CLEAR_DATA:
