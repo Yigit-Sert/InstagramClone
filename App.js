@@ -10,8 +10,6 @@ import MainScreen from "./components/Main";
 import AddScreen from "./components/main/Add";
 import SaveScreen from "./components/main/Save";
 import CommentScreen from "./components/main/Comment";
-import FollowingListScreen from "./components/main/FollowingList";
-import PrivateChatScreen from "./components/main/PrivateChat";
 import { Provider as PaperProvider } from "react-native-paper";
 
 import { initializeApp } from "firebase/app";
@@ -87,7 +85,7 @@ export class App extends Component {
     }
     return (
       <Provider store={store}>
-        <PaperProvider>
+         <PaperProvider>
           <NavigationContainer>
             <Stack.Navigator initialRouteName="Main">
               <Stack.Screen
@@ -106,11 +104,6 @@ export class App extends Component {
                 component={CommentScreen}
                 navigation={this.props.navigation}
               />
-              <Stack.Screen
-                name="FollowingList"
-                component={FollowingListScreen}
-              />
-              <Stack.Screen name="PrivateChat" component={PrivateChatScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </PaperProvider>
