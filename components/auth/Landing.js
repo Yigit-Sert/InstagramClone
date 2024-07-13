@@ -5,7 +5,7 @@ import { Button } from "react-native-paper";
 export default function Landing({ navigation }) {
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Button
+       <Button
         mode="contained"
         onPress={() => navigation.navigate("Register")}
         style={{ marginBottom: 10 }}
