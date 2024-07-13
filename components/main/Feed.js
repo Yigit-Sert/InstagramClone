@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Image, FlatList, Button } from "react-native";
+import { StyleSheet, View, Image, FlatList, TouchableOpacity } from "react-native";
+import { Card, Button, Text } from 'react-native-paper';
 import { connect } from "react-redux";
 import { initializeApp } from "firebase/app";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import {
-  collection,
-  getFirestore,
-  doc,
-  setDoc,
-  getDocs,
-  getDoc,
-  runTransaction,
-  query,
-  orderBy,
-  deleteDoc,
+  collection, getFirestore, doc, setDoc, getDocs, getDoc, runTransaction, query, orderBy, deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../auth/firebaseConfig";
@@ -39,9 +32,8 @@ function Feed(props) {
 
   const onLikePress = async (uid, postId) => {
     const currentUserUid = auth.currentUser.uid;
-  
+
     try {
-      // Reference to the like document
       const likeRef = doc(
         db,
         "posts",
@@ -51,39 +43,32 @@ function Feed(props) {
         "likes",
         currentUserUid
       );
-  
-      // Reference to the post document
+
       const postRef = doc(db, "posts", uid, "userPosts", postId);
-  
-      // Use a transaction to set the like and update the likeCounter
+
       await runTransaction(db, async (transaction) => {
         const postDoc = await transaction.get(postRef);
         if (!postDoc.exists()) {
           throw "Post does not exist!";
         }
-  
-        // Get the current likeCounter value or initialize it to 0
+
         const currentLikeCounter = postDoc.data().likeCounter || 0;
         const newLikeCounter = currentLikeCounter + 1;
-  
-        // Set the like document
+
         transaction.set(likeRef, {});
-  
-        // Update the likeCounter field
+
         transaction.update(postRef, { likeCounter: newLikeCounter });
       });
-  
+
       console.log("Like successfully added and likeCounter updated!");
     } catch (error) {
       console.error("Error adding like: ", error);
-      // Handle error
     }
   };
-  
+
   const onDislikePress = async (uid, postId) => {
     const currentUserUid = auth.currentUser.uid;
-  
-    // Reference to the like document
+
     const likeRef = doc(
       db,
       "posts",
@@ -93,73 +78,60 @@ function Feed(props) {
       "likes",
       currentUserUid
     );
-  
-    // Reference to the post document
+
     const postRef = doc(db, "posts", uid, "userPosts", postId);
-  
+
     try {
-      // Use a transaction to delete the like and update the likeCounter
       await runTransaction(db, async (transaction) => {
         const postDoc = await transaction.get(postRef);
         if (!postDoc.exists()) {
           throw "Post does not exist!";
         }
-  
-        // Get the current likeCounter value or initialize it to 0
+
         const currentLikeCounter = postDoc.data().likeCounter || 0;
         const newLikeCounter = currentLikeCounter - 1;
-  
-        // Delete the like document
+
         transaction.delete(likeRef);
-  
-        // Update the likeCounter field
+
         transaction.update(postRef, { likeCounter: newLikeCounter });
       });
-  
+
       console.log("Like successfully removed and likeCounter updated!");
     } catch (error) {
       console.error("Error removing like: ", error);
-      // Handle error
     }
   };
-  
 
   return (
     <View style={styles.container}>
-      <View style={styles.containerGallery}>
-        <FlatList
-          numColumns={1}
-          horizontal={false}
-          data={posts}
-          renderItem={({ item }) => (
-            <View style={styles.containerImage}>
-              <Text style={styles.container}>{item.user.name}</Text>
-              <Image style={styles.image} source={{ uri: item.downloadURL }} />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => props.navigation.navigate("FollowingList")}
+      >
+        <MaterialCommunityIcons name="chat" size={24} color="white" />
+        <Text style={styles.buttonText}>Go to Chat</Text>
+      </TouchableOpacity>
+      <FlatList
+        numColumns={1}
+        horizontal={false}
+        data={posts}
+        renderItem={({ item }) => (
+          <Card style={styles.containerCard}>
+            <Card.Title title={item.user.name} />
+            <Card.Cover source={{ uri: item.downloadURL }} />
+            <Card.Actions>
               {item.currentUserLike ? (
-                <Button
-                  title="Dislike"
-                  onPress={() => onDislikePress(item.user.uid, item.id)}
-                />
+                <Button onPress={() => onDislikePress(item.user.uid, item.id)}>Dislike</Button>
               ) : (
-                <Button
-                  title="Like"
-                  onPress={() => onLikePress(item.user.uid, item.id)}
-                />
+                <Button onPress={() => onLikePress(item.user.uid, item.id)}>Like</Button>
               )}
-              <Text
-                onPress={() =>
-                  props.navigation.navigate("Comment", {
-                    postId: item.id,
-                    uid: item.user.uid,
-                  })
-                }
-              >
+              <Button onPress={() => props.navigation.navigate("Comment", { postId: item.id, uid: item.user.uid })}>
                 View Comments...
-              </Text>
-            </View>
-          )}
-        />
-      </View>
+              </Button>
+            </Card.Actions>
+          </Card>
+        )}
+      />
     </View>
   );
 }
@@ -168,18 +140,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  containerInfo: {
-    margin: 20,
+  button: {
+    padding: 10,
+    backgroundColor: '#6200ee',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    flexDirection: 'row',
+    margin: 10
   },
-  containerGallery: {
-    flex: 1,
+  buttonText: {
+    color: 'white',
+    marginLeft: 5,
   },
-  containerImage: {
-    flex: 1,
-  },
-  image: {
-    flex: 1,
-    aspectRatio: 1 / 1,
+  containerCard: {
+    margin: 10,
   },
 });
 

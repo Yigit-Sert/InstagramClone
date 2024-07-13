@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { View, Button, TextInput } from 'react-native';
+import { View } from 'react-native';
+import { Button, TextInput } from 'react-native-paper';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -42,25 +43,36 @@ export class Register extends Component {
 
     render() {
         return (
-            <View>
+            <View style={{ padding: 20,
+                flex: 1,
+                justifyContent: 'center'
+             }}>
                 <TextInput
-                    placeholder="Name"
+                    label="Name"
+                    mode="outlined"
                     onChangeText={(name) => this.setState({ name })}
                     value={this.state.name}
+                    style={{ marginBottom: 10 }}
                 />
                 <TextInput
-                    placeholder="Email"
+                    label="Email"
+                    mode="outlined"
                     onChangeText={(email) => this.setState({ email })}
                     value={this.state.email}
+                    style={{ marginBottom: 10 }}
                 />
                 <TextInput
-                    placeholder="Password"
+                    label="Password"
+                    mode="outlined"
                     secureTextEntry={true}
                     onChangeText={(password) => this.setState({ password })}
                     value={this.state.password}
+                    style={{ marginBottom: 10 }}
                 />
 
-                <Button onPress={this.onSignUp} title="Sign Up" />
+                <Button mode="contained" onPress={this.onSignUp}>
+                    Sign Up
+                </Button>
             </View>
         )
     }

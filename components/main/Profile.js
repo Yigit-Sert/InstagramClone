@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Image, FlatList, Button } from "react-native";
+import { StyleSheet, View, Text, Image, FlatList } from "react-native";
 import { connect } from "react-redux";
+import { Button } from "react-native-paper"; // Button component from React Native Paper
 
+// Your Firebase imports remain unchanged
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
@@ -29,8 +31,8 @@ function Profile(props) {
   const [following, setFollowing] = useState(false);
 
   useEffect(() => {
+    // Your existing useEffect code remains unchanged
     const { currentUser, posts } = props;
-    console.log({ currentUser, posts });
 
     if (!props.route.params || !props.route.params.uid) {
       console.log("UID is not provided");
@@ -83,9 +85,6 @@ function Profile(props) {
     }
   }, [props.route.params, props.currentUser, props.posts, props.following]);
 
-  const { currentUser, posts } = props;
-  console.log({ currentUser, posts });
-
   const onFollow = () => {
     const followingRef = doc(
       db,
@@ -110,7 +109,7 @@ function Profile(props) {
 
   const onLogout = () => {
     auth.signOut();
-  }
+  };
 
   if (user === null) {
     return <View />;
@@ -126,28 +125,34 @@ function Profile(props) {
           <View>
             {following ? (
               <Button
-                title="Following"
+                mode="contained"
                 onPress={() => {
                   onUnfollow();
                 }}
-              />
+              >
+                Following
+              </Button>
             ) : (
               <Button
-                title="Follow"
+                mode="contained"
                 onPress={() => {
                   onFollow();
                 }}
-              />
+              >
+                Follow
+              </Button>
             )}
           </View>
-        ) :
+        ) : (
           <Button
-            title="Logout"
+            mode="contained"
             onPress={() => {
               onLogout();
             }}
-          />
-        }
+          >
+            Logout
+          </Button>
+        )}
       </View>
       <View style={styles.containerGallery}>
         <FlatList
