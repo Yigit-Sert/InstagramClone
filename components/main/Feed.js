@@ -2,18 +2,11 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Image, FlatList, TouchableOpacity } from "react-native";
 import { Card, Button, Text } from 'react-native-paper';
 import { connect } from "react-redux";
-import { initializeApp } from "firebase/app";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import {
   collection, getFirestore, doc, setDoc, getDocs, getDoc, runTransaction, query, orderBy, deleteDoc,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import firebaseConfig from "../auth/firebaseConfig";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+import { db, auth } from "../auth/firebaseConfig";
 
 function Feed(props) {
   const [posts, setPosts] = useState([]);

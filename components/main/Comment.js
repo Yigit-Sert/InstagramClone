@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, FlatList } from "react-native";
-import { initializeApp } from "firebase/app";
 import { collection, getFirestore, addDoc, getDocs } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import firebaseConfig from "../auth/firebaseConfig";
+import { db, auth } from "../auth/firebaseConfig";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { fetchUsersData } from "../../redux/actions";
 import { Card, TextInput, Button, Text } from 'react-native-paper';
-
-// Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 function Comment(props) {
   const [comments, setComments] = useState([]);
@@ -64,7 +58,7 @@ function Comment(props) {
   }, [props.route.params.postId, props.users]);
 
   const onCommentSend = async () => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     const comment = {
       text,
       userId: user.uid,

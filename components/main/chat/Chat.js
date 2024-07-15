@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
 import { collection, addDoc, orderBy, query, onSnapshot, getFirestore, doc } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 import { useRoute } from "@react-navigation/native";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../../auth/firebaseConfig";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+import { db, auth } from "../../auth/firebaseConfig";
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
