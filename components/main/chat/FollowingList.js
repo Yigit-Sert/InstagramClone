@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchFollowingUsers } from '../../redux/actions/index';
+import { fetchFollowingUsers } from '../../../redux/actions/index';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { List } from 'react-native-paper'; // React Native Paper'dan List bileşenini ekliyoruz
 
