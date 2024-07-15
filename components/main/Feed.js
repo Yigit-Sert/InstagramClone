@@ -106,7 +106,7 @@ function Feed(props) {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => props.navigation.navigate("Chat")}
+        onPress={() => props.navigation.navigate("FollowingList")}
       >
         <MaterialCommunityIcons name="chat" size={24} color="white" />
         <Text style={styles.buttonText}>Go to Chat</Text>

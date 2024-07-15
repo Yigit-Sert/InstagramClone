@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback } from "react";
-import { TouchableOpacity, Text } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import { 
-  collection, addDoc, orderBy, query, onSnapshot, 
-  getFirestore 
-} from "firebase/firestore";
-import { signOut, getAuth } from "firebase/auth";
-import { useNavigation } from "@react-navigation/native";
-import { AntDesign } from "@expo/vector-icons";
-
-// Import firebase configuration and initialize Firebase
+import { collection, addDoc, orderBy, query, onSnapshot, getFirestore, doc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { useRoute } from "@react-navigation/native";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../auth/firebaseConfig";
 
@@ -19,23 +12,14 @@ const auth = getAuth(app);
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
-  const navigation = useNavigation();
+  const route = useRoute();
+  const { userId, userName } = route.params;
 
-//   useLayoutEffect(() => {
-//     navigation.setOptions({
-//       headerRight: () => (
-//         <TouchableOpacity
-//           style={{ marginRight: 10 }}
-//           onPress={() => signOut(auth)}
-//         >
-//           <AntDesign name="logout" size={24} color="black" />
-//         </TouchableOpacity>
-//       ),
-//     });
-//   }, [navigation]);
+  const currentUser = auth.currentUser;
+  const chatId = [currentUser.uid, userId].sort().join("_");
 
   useLayoutEffect(() => {
-    const collectionRef = collection(db, "messages");
+    const collectionRef = collection(db, `chats/${chatId}/messages`);
     const q = query(collectionRef, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -43,7 +27,6 @@ export default function Chat() {
         const data = doc.data();
         const _id = doc.id;
         return { _id, ...data };
-
       });
       setMessages(_messages);
     });
@@ -70,7 +53,7 @@ export default function Chat() {
     };
 
     try {
-      await addDoc(collection(db, "messages"), message);
+      await addDoc(collection(db, `chats/${chatId}/messages`), message);
     } catch (error) {
       console.error("Error adding document: ", error);
     }

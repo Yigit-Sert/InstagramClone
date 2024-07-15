@@ -11,6 +11,8 @@ import AddScreen from "./components/main/Add";
 import SaveScreen from "./components/main/Save";
 import CommentScreen from "./components/main/Comment";
 import ChatScreen from "./components/main/chat/Chat";
+import ListScreen from "./components/main/chat/List";
+import FollowingList from "./components/main/FollowingList";
 import { Provider as PaperProvider } from "react-native-paper";
 
 import { initializeApp } from "firebase/app";
@@ -105,10 +107,9 @@ export class App extends Component {
                 component={CommentScreen}
                 navigation={this.props.navigation}
               />
-              <Stack.Screen
-                name="Chat"
-                component={ChatScreen}
-              />
+              <Stack.Screen name="Chat" component={ChatScreen} />
+              <Stack.Screen name="List" component={ListScreen} />
+              <Stack.Screen name="FollowingList" component={FollowingList} />
             </Stack.Navigator>
           </NavigationContainer>
         </PaperProvider>

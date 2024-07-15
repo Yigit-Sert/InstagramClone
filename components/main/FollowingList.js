@@ -19,7 +19,7 @@ export default function FollowingList({ navigation }) {
         keyExtractor={(item) => item.uid}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => navigation.navigate('PrivateChat', { userId: item.uid, userName: item.name })}
+            onPress={() => navigation.navigate('Chat', { userId: item.uid, userName: item.name })}
             style={{ padding: 10, borderBottomWidth: 1, borderColor: '#ccc' }}
           >
             <List.Item title={item.name} />
