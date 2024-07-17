@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Image } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { View, Image, StyleSheet, Text } from "react-native"; // Import Text from react-native
+import { TextInput, Button, Switch } from "react-native-paper";
 import { getAuth } from "firebase/auth";
 import {
   getStorage,
@@ -19,14 +19,13 @@ import { app } from "../auth/firebaseConfig"; // Ensure this import points to yo
 
 export default function Save(props) {
   const [caption, setCaption] = useState("");
+  const [isStory, setIsStory] = useState(false); // New state for story toggle
 
   const uploadImage = async () => {
     const uri = props.route.params.image;
     const auth = getAuth(app);
     const storage = getStorage(app);
-    const childPath = `post/${auth.currentUser.uid}/${Math.random().toString(
-      36
-    )}`;
+    const childPath = `${isStory ? 'stories' : 'post'}/${auth.currentUser.uid}/${Math.random().toString(36)}`;
 
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -53,14 +52,12 @@ export default function Save(props) {
     const auth = getAuth(app);
     const db = getFirestore(app);
     try {
-      await addDoc(
-        collection(doc(db, "posts", auth.currentUser.uid), "userPosts"),
-        {
-          downloadURL,
-          caption,
-          creation: serverTimestamp(),
-        }
-      );
+      const collectionRef = collection(doc(db, isStory ? "stories" : "posts", auth.currentUser.uid), isStory ? "userStories" : "userPosts");
+      await addDoc(collectionRef, {
+        downloadURL,
+        caption,
+        creation: serverTimestamp(),
+      });
       props.navigation.popToTop();
     } catch (error) {
       console.log("Error adding document: ", error);
@@ -76,9 +73,24 @@ export default function Save(props) {
         onChangeText={(caption) => setCaption(caption)}
         style={{ margin: 10 }}
       />
+      <View style={styles.toggleContainer}>
+        <Switch value={isStory} onValueChange={setIsStory} />
+        <Text style={styles.toggleText}>{isStory ? "Story" : "Post"}</Text>
+      </View>
       <Button mode="contained" onPress={() => uploadImage()} style={{ margin: 10 }}>
         Save
       </Button>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
+  },
+  toggleText: {
+    marginLeft: 10,
+  },
+});

@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
-import { Card, Button, Text } from 'react-native-paper';
-import { connect } from 'react-redux';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { runTransaction } from 'firebase/firestore';
-import { db, auth } from '../auth/firebaseConfig';
-import StoryProfile from './stories/components/StoryProfile';
-import StoryComponent from './stories/components/StoryComponent';
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, FlatList, TouchableOpacity } from "react-native";
+import { Card, Button, Text } from "react-native-paper";
+import { connect } from "react-redux";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { db, auth } from "../auth/firebaseConfig";
+import StoryProfile from "./stories/components/StoryProfile";
+import StoryComponent from "./stories/components/StoryComponent";
 
 function Feed(props) {
   const [posts, setPosts] = useState([]);
-  const [insideStory, setInsideStory] = useState(false);
+  const [stories, setStories] = useState([]);
+  const [selectedStoryUser, setSelectedStoryUser] = useState(null);
+  const [usersData, setUsersData] = useState({});
 
   useEffect(() => {
     if (
@@ -24,105 +26,114 @@ function Feed(props) {
     }
   }, [props.usersFollowingLoaded, props.following, props.users, props.feed]);
 
-  const openStory = () => {
-    setInsideStory(true);
+  useEffect(() => {
+    fetchUsersData();
+  }, [props.following]);
+
+  const fetchUsersData = async () => {
+    const usersData = {};
+    for (const uid of props.following) {
+      const userRef = doc(db, "users", uid);
+      const userSnapshot = await getDoc(userRef);
+      if (userSnapshot.exists()) {
+        usersData[uid] = userSnapshot.data();
+      }
+    }
+    setUsersData(usersData);
+  };
+
+  const fetchStories = async () => {
+    const storiesArray = [];
+    for (const uid of props.following) {
+      const storiesRef = collection(db, "users", uid, "stories");
+      const storiesSnapshot = await getDocs(storiesRef);
+      storiesSnapshot.forEach((doc) => {
+        storiesArray.push({ ...doc.data(), uid });
+      });
+    }
+    setStories(storiesArray);
+  };
+
+  const openStory = (uid) => {
+    setSelectedStoryUser(uid);
   };
 
   const closeStory = () => {
-    setInsideStory(false);
-  };
-
-  const onLikePress = async (uid, postId) => {
-    const currentUserUid = auth.currentUser.uid;
-
-    try {
-      const likeRef = db.doc(`posts/${uid}/userPosts/${postId}/likes/${currentUserUid}`);
-      const postRef = db.doc(`posts/${uid}/userPosts/${postId}`);
-
-      await runTransaction(db, async (transaction) => {
-        const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists) {
-          throw 'Post does not exist!';
-        }
-
-        const currentLikeCounter = postDoc.data().likeCounter || 0;
-        const newLikeCounter = currentLikeCounter + 1;
-
-        transaction.set(likeRef, {});
-        transaction.update(postRef, { likeCounter: newLikeCounter });
-      });
-
-      console.log('Like successfully added and likeCounter updated!');
-    } catch (error) {
-      console.error('Error adding like: ', error);
-    }
-  };
-
-  const onDislikePress = async (uid, postId) => {
-    const currentUserUid = auth.currentUser.uid;
-
-    const likeRef = db.doc(`posts/${uid}/userPosts/${postId}/likes/${currentUserUid}`);
-    const postRef = db.doc(`posts/${uid}/userPosts/${postId}`);
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists) {
-          throw 'Post does not exist!';
-        }
-
-        const currentLikeCounter = postDoc.data().likeCounter || 0;
-        const newLikeCounter = currentLikeCounter - 1;
-
-        transaction.delete(likeRef);
-        transaction.update(postRef, { likeCounter: newLikeCounter });
-      });
-
-      console.log('Like successfully removed and likeCounter updated!');
-    } catch (error) {
-      console.error('Error removing like: ', error);
-    }
+    setSelectedStoryUser(null);
   };
 
   return (
     <View style={styles.container}>
-      {insideStory ? (
-        <StoryComponent onFinishStory={closeStory} />
+      {selectedStoryUser ? (
+        <StoryComponent onFinishStory={closeStory} uid={selectedStoryUser} />
       ) : (
         <>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => props.navigation.navigate('FollowingList')}
-          >
-            <MaterialCommunityIcons name='chat' size={24} color='white' />
-            <Text style={styles.buttonText}>Go to Chat</Text>
-          </TouchableOpacity>
-          <StoryProfile
-            outLineColor='#33ad1d'
-            displayName='Binaryhood'
-            onPressWrapped={openStory}
-          />
-          <FlatList
-            numColumns={1}
-            horizontal={false}
-            data={posts}
-            renderItem={({ item }) => (
-              <Card style={styles.containerCard}>
-                <Card.Title title={item.user.name} />
-                <Card.Cover source={{ uri: item.downloadURL }} />
-                <Card.Actions>
-                  {item.currentUserLike ? (
-                    <Button onPress={() => onDislikePress(item.user.uid, item.id)}>Dislike</Button>
-                  ) : (
-                    <Button onPress={() => onLikePress(item.user.uid, item.id)}>Like</Button>
-                  )}
-                  <Button onPress={() => props.navigation.navigate('Comment', { postId: item.id, uid: item.user.uid })}>
-                    View Comments...
-                  </Button>
-                </Card.Actions>
-              </Card>
-            )}
-          />
+          <View style={styles.container}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => props.navigation.navigate("FollowingList")}
+            >
+              <MaterialCommunityIcons name="chat" size={24} color="white" />
+              <Text style={styles.buttonText}>Go to Chat</Text>
+            </TouchableOpacity>
+
+            <FlatList
+              style={styles.flatList}
+              contentContainerStyle={styles.storiesList}
+              horizontal
+              data={props.following}
+              renderItem={({ item }) => (
+                <StoryProfile
+                  key={item}
+                  outLineColor="#33ad1d"
+                  displayName={usersData[item]?.name}
+                  imageUrl={usersData[item]?.profileImageUrl}
+                  onPressWrapped={() => openStory(item)}
+                />
+              )}
+              keyExtractor={(item, index) => index.toString()}
+            />
+
+            <FlatList
+              style={styles.flatList}
+              contentContainerStyle={styles.flatListContent}
+              numColumns={1}
+              horizontal={false}
+              data={posts}
+              renderItem={({ item }) => (
+                <Card style={styles.containerCard}>
+                  <Card.Title title={item.user.name} />
+                  <Card.Cover source={{ uri: item.downloadURL }} />
+                  <Card.Actions>
+                    {item.currentUserLike ? (
+                      <Button
+                        onPress={() => onDislikePress(item.user.uid, item.id)}
+                      >
+                        Dislike
+                      </Button>
+                    ) : (
+                      <Button
+                        onPress={() => onLikePress(item.user.uid, item.id)}
+                      >
+                        Like
+                      </Button>
+                    )}
+                    <Button
+                      onPress={() =>
+                        props.navigation.navigate("Comment", {
+                          postId: item.id,
+                          uid: item.user.uid,
+                        })
+                      }
+                    >
+                      View Comments...
+                    </Button>
+                  </Card.Actions>
+                </Card>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+            />
+          </View>
         </>
       )}
     </View>
@@ -135,19 +146,29 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 10,
-    backgroundColor: '#6200ee',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#6200ee",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 5,
-    flexDirection: 'row',
+    flexDirection: "row",
     margin: 10,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     marginLeft: 5,
   },
   containerCard: {
     margin: 10,
+  },
+  flatList: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  flatListContent: {
+    paddingHorizontal: 5,
+  },
+  storiesList: {
+    paddingHorizontal: 10, 
   },
 });
 
