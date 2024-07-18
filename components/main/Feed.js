@@ -13,6 +13,7 @@ function Feed(props) {
   const [stories, setStories] = useState([]);
   const [selectedStoryUser, setSelectedStoryUser] = useState(null);
   const [usersData, setUsersData] = useState({});
+  const [usersWithStories, setUsersWithStories] = useState([]);
 
   useEffect(() => {
     if (
@@ -28,6 +29,7 @@ function Feed(props) {
 
   useEffect(() => {
     fetchUsersData();
+    fetchStories();
   }, [props.following]);
 
   const fetchUsersData = async () => {
@@ -44,14 +46,19 @@ function Feed(props) {
 
   const fetchStories = async () => {
     const storiesArray = [];
+    const usersWithStories = [];
     for (const uid of props.following) {
-      const storiesRef = collection(db, "users", uid, "stories");
+      const storiesRef = collection(db, "stories", uid, "userStories");
       const storiesSnapshot = await getDocs(storiesRef);
-      storiesSnapshot.forEach((doc) => {
-        storiesArray.push({ ...doc.data(), uid });
-      });
+      if (!storiesSnapshot.empty) {
+        usersWithStories.push(uid);
+        storiesSnapshot.forEach((doc) => {
+          storiesArray.push({ ...doc.data(), uid });
+        });
+      }
     }
     setStories(storiesArray);
+    setUsersWithStories(usersWithStories);
   };
 
   const openStory = (uid) => {
@@ -81,7 +88,7 @@ function Feed(props) {
               style={styles.flatList}
               contentContainerStyle={styles.storiesList}
               horizontal
-              data={props.following}
+              data={usersWithStories}
               renderItem={({ item }) => (
                 <StoryProfile
                   key={item}
@@ -102,8 +109,19 @@ function Feed(props) {
               data={posts}
               renderItem={({ item }) => (
                 <Card style={styles.containerCard}>
-                  <Card.Title title={item.user.name} />
+                  <TouchableOpacity
+                    onPress={() =>
+                      props.navigation.navigate("Profile", {
+                        uid: item.user.uid,
+                      })
+                    }
+                  >
+                    <Text style={{ padding: 10 }}>{item.user.name}</Text>
+                  </TouchableOpacity>
                   <Card.Cover source={{ uri: item.downloadURL }} />
+                  <Card.Content>
+                    <Text style={{ paddingTop: 10 }}>{item.caption}</Text>
+                  </Card.Content>
                   <Card.Actions>
                     {item.currentUserLike ? (
                       <Button
@@ -161,14 +179,13 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   flatList: {
-    flex: 1,
     marginHorizontal: 10,
   },
   flatListContent: {
     paddingHorizontal: 5,
   },
   storiesList: {
-    paddingHorizontal: 10, 
+    paddingVertical: 20,
   },
 });
 

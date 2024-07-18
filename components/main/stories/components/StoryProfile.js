@@ -7,7 +7,7 @@ const StoryProfile = ({ outLineColor, displayName, imageUrl, onPressWrapped }) =
       <TouchableOpacity onPress={onPressWrapped}>
         <View style={[styles.imageContainer, { borderColor: outLineColor }]}>
           <Image
-            source={imageUrl ? { uri: imageUrl } : require('../assets/binary.png')}
+            source={imageUrl ? { uri: imageUrl } : require('../assets/profile.jpg')}
             style={styles.profileImage}
           />
         </View>
@@ -21,20 +21,21 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    margin: 5,
   },
   imageContainer: {
-    borderWidth: 5,
-    borderRadius: 80,
-    padding: 0.2,
+    borderWidth: 2,
+    borderRadius: 40,
+    padding: 0.1,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   nameText: {
-    marginTop: 8,
-    fontSize: 18,
+    marginTop: 4,
+    fontSize: 12,
     textAlign: 'center',
   },
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Image, View, TouchableOpacity, Pressable, StyleSheet, SafeAreaView, Text } from "react-native";
 import { collection, doc, getDocs, getDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebaseConfig';
-import StoryProfile from './StoryProfile'; // StoryProfile componentini import edin
+import StoryProfile from './StoryProfile'; 
 import { mute, unmute, pause, play } from '../helpers/exportedFunctions';
 
 const { width } = Dimensions.get("window");
@@ -146,14 +146,25 @@ const StoryComponent = ({ onFinishStory, uid }) => {
             {currentStory && renderStoryContent(currentStory)}
             <View style={styles.progressContainer}>
               {userStories.map((story, index) => (
-                <StoryProfile
-                  key={index}
-                  outLineColor="grey"  
-                  displayName={userName}
-                  imageUrl={story}  
-                  onPressWrapped={() => {}}
-                  progressBarWidth={getProgressBarWidth(index, currentStoryIndex)} // Add this prop
-                />
+                <React.Fragment key={index}>
+                  <StoryProfile
+                    outLineColor="green"
+                    // displayName={userName}
+                    imageUrl={story}
+                    onPressWrapped={() => {}}
+                    progressBarWidth={getProgressBarWidth(index, currentStoryIndex)} // Add this prop
+                  />
+                  <Text 
+                  style={{ 
+                    color: "white", 
+                    fontSize: 18, 
+                    fontWeight: "bold",
+                    textShadowColor: "black",
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 10,
+                    top: 20,
+                   }}>{userName}</Text>
+                </React.Fragment>
               ))}
             </View>
           </>
