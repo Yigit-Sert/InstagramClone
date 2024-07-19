@@ -18,13 +18,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "react-native-video"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d40bab77-56cb-4521-af8b-174de224d80f"
+      }
+    },
+    "owner": "yigitsert"
   }
 }
