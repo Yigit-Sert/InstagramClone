@@ -3,7 +3,8 @@ import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { Alert, Platform } from "react-native";
 import { useEffect, useState, useRef } from "react";
-import { app, db } from "../components/auth/firebaseConfig";
+import { auth, db } from "../components/auth/firebaseConfig";
+import { collection, doc, updateDoc } from "firebase/firestore";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -43,16 +44,17 @@ export default function NotificationProvider({ children }) {
   }, [expoPushToken]);
 
   const saveUserPushToken = async () => {
-    if (!user?.id || !expoPushToken) {
-      return;
-    }
-    try {
-      await db.collection("users").doc(user.id).update({
-        pushToken: expoPushToken,
-      });
-      console.log("Push token successfully saved to database!");
-    } catch (error) {
-      console.error("Error saving push token to database: ", error);
+    if (expoPushToken) {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(collection(db, "users"), user.uid);
+        await updateDoc(userRef, { pushToken: expoPushToken });
+        console.log("Push token saved successfully");
+      } else {
+        console.log("No user is signed in");
+      }
+    } else {
+      console.log("No push token available");
     }
   };
 
