@@ -7,6 +7,7 @@ import { collection, getDocs, query, where, doc, getDoc, runTransaction } from "
 import { db, auth } from "../auth/firebaseConfig";
 import StoryProfile from "./stories/components/StoryProfile";
 import StoryComponent from "./stories/components/StoryComponent";
+import { sendLikeNotification } from "../../utils/notifications"; 
 
 function Feed(props) {
   const [posts, setPosts] = useState([]);
@@ -87,6 +88,8 @@ function Feed(props) {
   
         transaction.set(likeRef, {});
         transaction.update(postRef, { likeCounter: newLikeCounter });
+
+        await sendLikeNotification({ user_id: uid });
       });
   
       console.log('Like successfully added and likeCounter updated!');
