@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Text, Image, FlatList } from "react-native";
 import { connect } from "react-redux";
 import { Button } from "react-native-paper"; // Button component from React Native Paper
+import { sendFollowNotification } from "../../utils/notifications";
 
 // Your Firebase imports remain unchanged
 import { initializeApp } from "firebase/app";
@@ -85,7 +86,7 @@ function Profile(props) {
     }
   }, [props.route.params, props.currentUser, props.posts, props.following]);
 
-  const onFollow = () => {
+  const onFollow = async () => {
     const followingRef = doc(
       db,
       "following",
@@ -94,6 +95,9 @@ function Profile(props) {
       props.route.params.uid
     );
     setDoc(followingRef, {});
+  
+    await sendFollowNotification(props.route.params.uid, auth.currentUser.uid);
+  
   };
 
   const onUnfollow = () => {

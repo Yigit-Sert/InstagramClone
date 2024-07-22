@@ -89,7 +89,7 @@ function Feed(props) {
         transaction.set(likeRef, {});
         transaction.update(postRef, { likeCounter: newLikeCounter });
 
-        await sendLikeNotification({ user_id: uid });
+        await sendLikeNotification(uid, currentUserUid, postId);
       });
   
       console.log('Like successfully added and likeCounter updated!');
