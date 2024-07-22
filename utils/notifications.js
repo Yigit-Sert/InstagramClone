@@ -72,6 +72,15 @@ export async function sendFollowNotification(followedUserId, followerId) {
   await sendNotification(followedUserId, title, body, data);
 }
 
+export async function sendMessageNotification(receiverId, senderId, messageText) {
+  const senderName = await getUserName(senderId);
+  const title = "New Message";
+  const body = `${senderName}: ${messageText}`;
+  const data = { type: "message", senderId, messageText };
+
+  await sendNotification(receiverId, title, body, data);
+}
+
 /* async function getPostOwnerId(postId) {
   const postRef = doc(db, 'posts', postId);
   const postDoc = await getDoc(postRef);
