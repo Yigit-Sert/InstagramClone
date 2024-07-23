@@ -83,7 +83,7 @@ function Comment(props) {
       console.error("Error adding comment: ", error);
     }
 
-    sendCommentNotification(props.route.params.uid, user.uid, props.route.params.postId);
+    sendCommentNotification(props.route.params.uid, user.uid, props.route.params.postId, text);
   };
 
   return (

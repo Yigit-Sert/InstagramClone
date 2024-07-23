@@ -1,56 +1,74 @@
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc } from "firebase/firestore";
 import { db } from "../components/auth/firebaseConfig";
 
-async function sendNotification(userId, title, body, data) {
+async function saveNotification(userId, notification) {
+  const notificationsRef = collection(db, `users/${userId}/notifications`);
+  await addDoc(notificationsRef, notification);
+}
+
+
+export async function sendNotification(receiverId, title, body, data) {
+  const userRef = doc(db, 'users', receiverId);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    console.error("User does not exist!");
+    return;
+  }
+
+  const userData = userDoc.data();
+  const pushToken = userData?.pushToken;
+
+  if (!pushToken) {
+    console.error("Cannot send notification, user has no token");
+    return;
+  }
+
+  const message = {
+    to: pushToken,
+    sound: "default",
+    title,
+    body,
+    data,
+  };
+
   try {
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-    
-    if (!userDoc.exists()) {
-      console.error("User does not exist!");
-      return;
-    }
-
-    const userData = userDoc.data();
-    const pushToken = userData?.pushToken;
-    
-    if (!pushToken) {
-      console.error("Cannot send notification, user has no token");
-      return;
-    }
-
-    const message = {
-      to: pushToken,
-      sound: "default",
-      title: title,
-      body: body,
-      data: data,
-    };
-
-    const response = await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(message),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to send push notification");
-    }
+    await sendPushNotification(message);
     console.log("Push notification sent successfully");
   } catch (error) {
     console.error("Error sending push notification:", error);
   }
+
+  const notification = {
+    title,
+    body,
+    data,
+    timestamp: new Date(),
+    read: false,
+  };
+
+  await saveNotification(receiverId, notification);
 }
 
-export async function sendCommentNotification(postOwnerId, commenterId, postId) {
+export async function sendPushNotification(message) {
+  const response = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Accept-encoding": "gzip, deflate",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(message),
+  });
+
+  return response;
+}
+
+export async function sendCommentNotification(postOwnerId, commenterId, postId, commentText) {
   const commenterName = await getUserName(commenterId);
   const title = "New Comment";
-  const body = `${commenterName} commented on your post`;
-  const data = { type: "comment", postId, commenterId };
+  const body = `${commenterName} commented on your post: ${commentText}`;
+  const data = { type: "comment", postId, commenterId, commentText };
 
   await sendNotification(postOwnerId, title, body, data);
 }
