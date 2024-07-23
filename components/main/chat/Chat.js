@@ -3,6 +3,7 @@ import { GiftedChat } from "react-native-gifted-chat";
 import { collection, addDoc, orderBy, query, onSnapshot, getFirestore, doc } from "firebase/firestore";
 import { useRoute } from "@react-navigation/native";
 import { db, auth } from "../../auth/firebaseConfig";
+import { sendMessageNotification } from "../../../utils/notifications";
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
@@ -48,10 +49,11 @@ export default function Chat() {
 
     try {
       await addDoc(collection(db, `chats/${chatId}/messages`), message);
+      await sendMessageNotification(userId, uid, text);
     } catch (error) {
       console.error("Error adding document: ", error);
     }
-  }, []);
+  }, [userId, chatId, onSend]);
 
   return (
     <GiftedChat

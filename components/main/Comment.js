@@ -6,6 +6,7 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { fetchUsersData } from "../../redux/actions";
 import { Card, TextInput, Button, Text } from 'react-native-paper';
+import { sendCommentNotification } from "../../utils/notifications";
 
 function Comment(props) {
   const [comments, setComments] = useState([]);
@@ -81,6 +82,8 @@ function Comment(props) {
     } catch (error) {
       console.error("Error adding comment: ", error);
     }
+
+    sendCommentNotification(props.route.params.uid, user.uid, props.route.params.postId, text);
   };
 
   return (
