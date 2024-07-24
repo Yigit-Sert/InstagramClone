@@ -5,6 +5,8 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import FeedScreen from "./main/Feed";
 import SearchScreen from "./main/Search";
 import ProfileScreen from "./main/Profile";
+import ReelsScreen from "./main/reels/Reels";
+import AddScreen from "./main/Add";
 
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -57,8 +59,8 @@ export class Main extends Component {
             }}
           />
           <Tab.Screen
-            name="AddContainer"
-            component={EmptyScreen}
+            name="Add"
+            component={AddScreen}
             listeners={({ navigation }) => ({
               tabPress: (event) => {
                 event.preventDefault();
@@ -67,6 +69,19 @@ export class Main extends Component {
             })}
             options={{
               tabBarIcon: "plus-box",
+            }}
+          />
+          <Tab.Screen
+            name="Reels"
+            component={ReelsScreen}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                event.preventDefault();
+                navigation.navigate("Reels", { uid: auth.currentUser.uid });
+              },
+            })}
+            options={{
+              tabBarIcon: "video",
             }}
           />
           <Tab.Screen

@@ -138,6 +138,8 @@ function Feed(props) {
     }
   };
 
+  const size = 30;
+
   return (
     <View style={styles.container}>
       {selectedStoryUser ? (
@@ -150,14 +152,14 @@ function Feed(props) {
                 style={styles.button}
                 onPress={() => props.navigation.navigate("Notification")}
               >
-                <MaterialCommunityIcons name="bell" size={25} color="white" />
+                <MaterialCommunityIcons name="bell" size={size} color="white" />
                 <Text style={styles.buttonText}></Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => props.navigation.navigate("FollowingList")}
               >
-                <MaterialCommunityIcons name="chat" size={25} color="white" />
+                <MaterialCommunityIcons name="chat" size={size} color="white" />
                 <Text style={styles.buttonText}></Text>
               </TouchableOpacity>
             </View>
