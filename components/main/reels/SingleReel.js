@@ -1,26 +1,33 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, Dimensions, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { Video } from 'expo-av'; 
-import { Ionicons, AntDesign, Feather } from '@expo/vector-icons'; 
+import React, { useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+} from "react-native";
+import { Video } from "expo-av";
+import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 
 const SingleReel = ({ item, index, currentIndex }) => {
-  const windowWidth = Dimensions.get('window').width;
-  const windowHeight = Dimensions.get('window').height;
+  const windowWidth = Dimensions.get("window").width;
+  const windowHeight = Dimensions.get("window").height;
 
   const videoRef = useRef(null);
   const [mute, setMute] = useState(false);
-  const [like, setLike] = useState(item.isLike);
+  // const [like, setLike] = useState(item.isLike);
 
   return (
     <View style={styles.container}>
       <Video
         ref={videoRef}
-        onBuffer={buffer => console.log('Buffering', buffer)}
-        onError={error => console.log('Error', error)}
+        onBuffer={(buffer) => console.log("Buffering", buffer)}
+        onError={(error) => console.log("Error", error)}
         shouldPlay={currentIndex === index}
         isMuted={mute}
-        resizeMode="cover"
-        source={item.video} 
+        resizeMode={Video.RESIZE_MODE_CONTAIN}
+        source={{ uri: item.downloadURL }}
         style={styles.video}
       />
       <TouchableOpacity
@@ -29,7 +36,7 @@ const SingleReel = ({ item, index, currentIndex }) => {
         style={styles.muteButton}
       >
         <Ionicons
-          name={mute ? 'volume-mute' : 'volume-high'}
+          name={mute ? "volume-mute" : "volume-high"}
           style={styles.muteIcon}
         />
       </TouchableOpacity>
@@ -37,24 +44,14 @@ const SingleReel = ({ item, index, currentIndex }) => {
         <View>
           <TouchableOpacity style={styles.profileContainer}>
             <View style={styles.profileImageWrapper}>
-              <Image
-                source={item.postProfile}
-                style={styles.profileImage}
-              />
+              <Image source={item.postProfile} style={styles.profileImage} />
             </View>
             <Text style={styles.title}>{item.title}</Text>
           </TouchableOpacity>
-          <Text style={styles.description}>{item.description}</Text>
-          <View style={styles.audioInfo}>
-            <Ionicons
-              name="ios-musical-note"
-              style={styles.audioIcon}
-            />
-            <Text style={styles.audioText}>Original Audio</Text>
-          </View>
+          <Text style={styles.description}>{item.caption}</Text>
         </View>
       </View>
-      <View style={styles.interactions}>
+      {/* <View style={styles.interactions}>
         <TouchableOpacity onPress={() => setLike(!like)} style={styles.interactionButton}>
           <AntDesign
             name={like ? 'heart' : 'hearto'}
@@ -86,36 +83,36 @@ const SingleReel = ({ item, index, currentIndex }) => {
             style={styles.profileThumbnailImage}
           />
         </View>
-      </View>
+      </View> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   video: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
+    width: "100%",
+    height: "100%",
+    position: "absolute",
   },
   muteButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     right: 10,
   },
   muteIcon: {
     fontSize: 30,
-    color: 'white',
+    color: "white",
   },
   infoContainer: {
-    position: 'absolute',
-    width: '100%',
+    position: "absolute",
+    width: "100%",
     zIndex: 1,
     bottom: 0,
     padding: 10,
@@ -127,37 +124,37 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 100,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     margin: 10,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
     borderRadius: 100,
   },
   title: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
   },
   description: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
     marginHorizontal: 10,
   },
   audioInfo: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 10,
   },
   audioIcon: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
   },
   audioText: {
-    color: 'white',
+    color: "white",
   },
   interactions: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     right: 0,
   },
@@ -165,25 +162,25 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   icon: {
-    color: 'white',
+    color: "white",
     fontSize: 25,
   },
   likes: {
-    color: 'white',
+    color: "white",
   },
   profileThumbnail: {
     width: 30,
     height: 30,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: "white",
     margin: 10,
   },
   profileThumbnailImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 10,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
 });
 
