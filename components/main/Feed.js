@@ -138,6 +138,8 @@ function Feed(props) {
     }
   };
 
+  const size = 30;
+
   return (
     <View style={styles.container}>
       {selectedStoryUser ? (
@@ -145,20 +147,22 @@ function Feed(props) {
       ) : (
         <>
           <View style={styles.container}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => props.navigation.navigate("FollowingList")}
-            >
-              <MaterialCommunityIcons name="chat" size={24} color="white" />
-              <Text style={styles.buttonText}>Go to Chat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => props.navigation.navigate("Notification")}
-            >
-              <MaterialCommunityIcons name="bell" size={24} color="white" />
-              <Text style={styles.buttonText}>Go to Notification</Text>
-            </TouchableOpacity>
+            <View style={styles.rowContainer}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => props.navigation.navigate("Notification")}
+              >
+                <MaterialCommunityIcons name="bell" size={size} color="white" />
+                <Text style={styles.buttonText}></Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => props.navigation.navigate("FollowingList")}
+              >
+                <MaterialCommunityIcons name="chat" size={size} color="white" />
+                <Text style={styles.buttonText}></Text>
+              </TouchableOpacity>
+            </View>
 
             <FlatList
               style={styles.flatList}
@@ -237,19 +241,19 @@ function Feed(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 10,
   },
   button: {
-    padding: 10,
+    padding: 5,
     backgroundColor: "#6200ee",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 5,
     flexDirection: "row",
-    margin: 10,
+    marginHorizontal: 5,
   },
   buttonText: {
     color: "white",
-    marginLeft: 5,
   },
   containerCard: {
     margin: 10,
@@ -262,6 +266,11 @@ const styles = StyleSheet.create({
   },
   storiesList: {
     paddingVertical: 20,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
 });
 

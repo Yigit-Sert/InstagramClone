@@ -8,27 +8,39 @@ export default function Add({ navigation }) {
   const [facing, setFacing] = useState("back");
   const [cameraPermission, requestPermission] = useCameraPermissions();
   const [camera, setCamera] = useState(null);
-  const [image, setImage] = useState(null);
+  const [media, setMedia] = useState(null);
+  // const [isVideo, setIsVideo] = useState(false);
 
   const takePicture = async () => {
     if (camera) {
       const data = await camera.takePictureAsync(null);
-      setImage(data.uri);
+      setMedia({ uri: data.uri, type: 'image' });
     }
   };
 
-  const pickImage = async () => {
+/*   const recordVideo = async () => {
+    if (camera) {
+      const data = await camera.recordAsync(null);
+      setMedia({ uri: data.uri, type: 'video' });
+    }
+  };
+
+  const stopVideoRecording = async () => {
+    if (camera) {
+      camera.stopRecording();
+    }
+  }; */
+
+  const pickMedia = async (mediaType) => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: mediaType,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
 
-    console.log(result);
-
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      setMedia({ uri: result.assets[0].uri, type: mediaType === ImagePicker.MediaTypeOptions.Images ? 'image' : 'video' });
     }
   };
 
@@ -61,11 +73,14 @@ export default function Add({ navigation }) {
           ref={ref => setCamera(ref)}
         />
       </View>
-      <Button style={{ margin: 10 }} mode="contained" onPress={toggleCameraFacing}>Flip Image</Button>
-      <Button style={{ margin: 10 }} mode="contained" onPress={takePicture}>Take Picture</Button>
-      <Button style={{ margin: 10 }} mode="contained" onPress={pickImage}>Pick Image From Gallery</Button>
-      <Button style={{ margin: 10 }} mode="contained" onPress={() => navigation.navigate('Save', {image})}>Save</Button>
-      {image && <Image source={{ uri: image }} style={{ flex: 1 }} />}
+      <Button style={{ margin: 2 }} mode="contained" onPress={toggleCameraFacing}>Flip Camera</Button>
+      <Button style={{ margin: 2 }} mode="contained" onPress={takePicture}>Take Picture</Button>
+      {/* <Button style={{ margin: 2 }} mode="contained" onPress={recordVideo}>Record Video</Button> */}
+      {/* <Button style={{ margin: 2 }} mode="contained" onPress={stopVideoRecording}>Stop Recording</Button> */}
+      <Button style={{ margin: 2 }} mode="contained" onPress={() => pickMedia(ImagePicker.MediaTypeOptions.Images)}>Pick Image From Gallery</Button>
+      <Button style={{ margin: 2 }} mode="contained" onPress={() => pickMedia(ImagePicker.MediaTypeOptions.Videos)}>Pick Video From Gallery</Button>
+      <Button style={{ margin: 2 }} mode="contained" onPress={() => navigation.navigate('Save', { media })}>Save</Button>
+      {media && <Image source={{ uri: media.uri }} style={{ flex: 1 }} />}
     </View>
   );
 }

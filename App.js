@@ -13,6 +13,7 @@ import CommentScreen from "./components/main/Comment";
 import ChatScreen from "./components/main/chat/Chat";
 import FollowingListScreen from "./components/main/chat/FollowingList";
 import NotificationScreen from "./components/main/Notification";
+import ReelsScreen from "./components/main/reels/Reels";
 import { Provider as PaperProvider } from "react-native-paper";
 
 import { initializeApp } from "firebase/app";
@@ -110,6 +111,7 @@ export class App extends Component {
               <Stack.Screen name="Chat" component={ChatScreen} />
               <Stack.Screen name="FollowingList" component={FollowingListScreen} />
               <Stack.Screen name="Notification" component={NotificationScreen} />
+              <Stack.Screen name="Reels" component={ReelsScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </PaperProvider>

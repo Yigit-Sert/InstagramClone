@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Image, StyleSheet, Text } from "react-native"; // Import Text from react-native
+import { View, Image, StyleSheet, Text } from "react-native";
 import { TextInput, Button, Switch } from "react-native-paper";
 import { getAuth } from "firebase/auth";
 import {
@@ -15,17 +15,18 @@ import {
   serverTimestamp,
   doc,
 } from "firebase/firestore";
-import { app } from "../auth/firebaseConfig"; // Ensure this import points to your firebase config file
+import { app } from "../auth/firebaseConfig";
 
 export default function Save(props) {
   const [caption, setCaption] = useState("");
-  const [isStory, setIsStory] = useState(false); // New state for story toggle
+  const [isStory, setIsStory] = useState(false);
 
-  const uploadImage = async () => {
-    const uri = props.route.params.image;
+  const uploadMedia = async () => {
+    const { uri, type } = props.route.params.media;
     const auth = getAuth(app);
     const storage = getStorage(app);
-    const childPath = `${isStory ? 'stories' : 'post'}/${auth.currentUser.uid}/${Math.random().toString(36)}`;
+    const isVideo = type === 'video';
+    const childPath = `${isStory ? 'stories' : isVideo ? 'reels' : 'posts'}/${auth.currentUser.uid}/${Math.random().toString(36)}`;
 
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -42,17 +43,17 @@ export default function Save(props) {
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          savePostData(downloadURL);
+          savePostData(downloadURL, isVideo);
         });
       }
     );
   };
 
-  const savePostData = async (downloadURL) => {
+  const savePostData = async (downloadURL, isVideo) => {
     const auth = getAuth(app);
     const db = getFirestore(app);
     try {
-      const collectionRef = collection(doc(db, isStory ? "stories" : "posts", auth.currentUser.uid), isStory ? "userStories" : "userPosts");
+      const collectionRef = collection(doc(db, isStory ? "stories" : isVideo ? "reels" : "posts", auth.currentUser.uid), isStory ? "userStories" : isVideo ? "userReels" : "userPosts");
       await addDoc(collectionRef, {
         downloadURL,
         caption,
@@ -66,7 +67,7 @@ export default function Save(props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <Image source={{ uri: props.route.params.image }} style={{ flex: 1 }} />
+      <Image source={{ uri: props.route.params.media.uri }} style={{ flex: 1 }} />
       <TextInput
         label="Write a Caption ..."
         value={caption}
@@ -75,9 +76,9 @@ export default function Save(props) {
       />
       <View style={styles.toggleContainer}>
         <Switch value={isStory} onValueChange={setIsStory} />
-        <Text style={styles.toggleText}>{isStory ? "Story" : "Post"}</Text>
+        <Text style={styles.toggleText}>{isStory ? "Story" : "Post/Reel"}</Text>
       </View>
-      <Button mode="contained" onPress={() => uploadImage()} style={{ margin: 10 }}>
+      <Button mode="contained" onPress={() => uploadMedia()} style={{ margin: 10 }}>
         Save
       </Button>
     </View>
