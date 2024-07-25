@@ -152,11 +152,32 @@ function Profile(props) {
     );
   };
 
-  const deletePostHandler = async (postId) => {
-    const postRef = doc(db, "posts", auth.currentUser.uid, "userPosts", postId);
-    await deleteDoc(postRef);
-    setUserPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+  const deletePostHandler = (postId) => {
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this post? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "OK",
+          onPress: async () => {
+            try {
+              const postRef = doc(db, "posts", auth.currentUser.uid, "userPosts", postId);
+              await deleteDoc(postRef);
+              setUserPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+            } catch (error) {
+              console.error("Error deleting post: ", error);
+            }
+          }
+        }
+      ],
+      { cancelable: false }
+    );
   };
+
 
   if (user === null) {
     return <View />;
