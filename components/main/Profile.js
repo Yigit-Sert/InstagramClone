@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Image, FlatList } from "react-native";
+import { StyleSheet, View, Text, Image, FlatList, Modal, TextInput, TouchableOpacity } from "react-native";
 import { connect } from "react-redux";
-import { Button } from "react-native-paper"; 
+import { Button, Appbar } from "react-native-paper";
+import * as ImagePicker from 'expo-image-picker'; 
 import { sendFollowNotification } from "../../utils/notifications";
-
-import {
-  collection,
-  doc,
-  setDoc,
-  deleteDoc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-} from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
 import { db, auth } from "../auth/firebaseConfig";
+
+const placeholderImage = 'https://placehold.co/600x400/png'; 
 
 function Profile(props) {
   const [userPosts, setUserPosts] = useState([]);
   const [user, setUser] = useState(null);
   const [following, setFollowing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
 
   useEffect(() => {
     const { currentUser, posts } = props;
@@ -34,6 +31,9 @@ function Profile(props) {
     if (uid === auth.currentUser.uid) {
       if (currentUser) {
         setUser(currentUser);
+        setName(currentUser.name);
+        setEmail(currentUser.email);
+        setProfileImage(currentUser.profileImage);
       }
       if (posts) {
         setUserPosts(posts);
@@ -44,6 +44,9 @@ function Profile(props) {
         .then((snapshot) => {
           if (snapshot.exists()) {
             setUser(snapshot.data());
+            setName(snapshot.data().name);
+            setEmail(snapshot.data().email);
+            setProfileImage(snapshot.data().profileImage);
           } else {
             console.log("User does not exist");
           }
@@ -86,7 +89,6 @@ function Profile(props) {
     setDoc(followingRef, {});
   
     await sendFollowNotification(props.route.params.uid, auth.currentUser.uid);
-  
   };
 
   const onUnfollow = () => {
@@ -104,12 +106,50 @@ function Profile(props) {
     auth.signOut();
   };
 
+  const openImagePicker = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const saveProfile = async () => {
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const updatedData = { name, email };
+    
+    // Include profileImage only if it's not null or undefined
+    if (profileImage) {
+      updatedData.profileImage = profileImage;
+    }
+
+    await setDoc(userRef, updatedData, { merge: true });
+    setModalVisible(false);
+  };
+
   if (user === null) {
     return <View />;
   }
 
   return (
     <View style={styles.container}>
+      <Appbar.Header>
+        <Appbar.Content 
+          title={
+            <Image
+              source={{ uri: profileImage || placeholderImage }}
+              style={styles.profileImageHeader}
+            />
+          }
+        />
+        <Appbar.Action icon="pencil" onPress={() => setModalVisible(true)} />
+      </Appbar.Header>
+
       <View style={styles.containerInfo}>
         <Text>{user.name}</Text>
         <Text>{user.email}</Text>
@@ -147,6 +187,7 @@ function Profile(props) {
           </Button>
         )}
       </View>
+      
       <View style={styles.containerGallery}>
         <FlatList
           numColumns={3}
@@ -159,6 +200,43 @@ function Profile(props) {
           )}
         />
       </View>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={name}
+            onChangeText={setName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <Button mode="contained" onPress={openImagePicker}>
+            Pick Profile Image
+          </Button>
+          {profileImage && (
+            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          )}
+          <Button mode="contained" onPress={saveProfile}>
+            Save
+          </Button>
+          <Button mode="contained" onPress={() => setModalVisible(false)}>
+            Cancel
+          </Button>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -180,6 +258,40 @@ const styles = StyleSheet.create({
   },
   containerImage: {
     flex: 1 / 3,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  input: {
+    height: 40,
+    width: "100%",
+    borderColor: "gray",
+    borderBottomWidth: 1,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  profileImageHeader: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginVertical: 10,
   },
 });
 
