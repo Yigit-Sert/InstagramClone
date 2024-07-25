@@ -26,7 +26,7 @@ export default function Save(props) {
     const auth = getAuth(app);
     const storage = getStorage(app);
     const isVideo = type === 'video';
-    const childPath = `${isStory ? 'stories' : isVideo ? 'reels' : 'posts'}/${auth.currentUser.uid}/${Math.random().toString(36)}`;
+    const childPath = `${isStory ? 'stories' : isVideo ? 'reels' : 'post'}/${auth.currentUser.uid}/${Math.random().toString(36)}`;
 
     const response = await fetch(uri);
     const blob = await response.blob();

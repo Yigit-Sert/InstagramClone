@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Image, FlatList, Modal, TextInput, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, Image, FlatList, Modal, TextInput, TouchableOpacity, Alert } from "react-native";
 import { connect } from "react-redux";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Appbar } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker'; 
 import { sendFollowNotification } from "../../utils/notifications";
-import { collection, doc, setDoc, deleteDoc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, getDoc, getDocs, orderBy, query, updateDoc } from "firebase/firestore";
 import { db, auth } from "../auth/firebaseConfig";
 
 const placeholderImage = 'https://placehold.co/600x400/png'; 
@@ -17,6 +18,9 @@ function Profile(props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [editPost, setEditPost] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [caption, setCaption] = useState('');
 
   useEffect(() => {
     const { currentUser, posts } = props;
@@ -123,13 +127,35 @@ function Profile(props) {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const updatedData = { name, email };
     
-    // Include profileImage only if it's not null or undefined
     if (profileImage) {
       updatedData.profileImage = profileImage;
     }
 
     await setDoc(userRef, updatedData, { merge: true });
     setModalVisible(false);
+  };
+
+  const editPostHandler = (post) => {
+    setEditPost(post);
+    setCaption(post.caption);
+    setEditModalVisible(true);
+  };
+
+  const saveEditPost = async () => {
+    const postRef = doc(db, "posts", auth.currentUser.uid, "userPosts", editPost.id);
+    await updateDoc(postRef, { caption });
+    setEditModalVisible(false);
+    setUserPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === editPost.id ? { ...post, caption } : post
+      )
+    );
+  };
+
+  const deletePostHandler = async (postId) => {
+    const postRef = doc(db, "posts", auth.currentUser.uid, "userPosts", postId);
+    await deleteDoc(postRef);
+    setUserPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
   };
 
   if (user === null) {
@@ -196,6 +222,16 @@ function Profile(props) {
           renderItem={({ item }) => (
             <View style={styles.containerImage}>
               <Image style={styles.image} source={{ uri: item.downloadURL }} />
+              {props.route.params.uid === auth.currentUser.uid && (
+                <View style={styles.postActions}>
+                  <Button mode="text" onPress={() => editPostHandler(item)}>
+                    <MaterialCommunityIcons name="pencil" size={24} color="black" />
+                  </Button>
+                  <Button mode="text" onPress={() => deletePostHandler(item.id)}>
+                    <MaterialCommunityIcons name="delete" size={24} color="black" />
+                  </Button>
+                </View>
+              )}
             </View>
           )}
         />
@@ -237,6 +273,31 @@ function Profile(props) {
           </Button>
         </View>
       </Modal>
+
+      {/* Edit Post Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => {
+          setEditModalVisible(!editModalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <TextInput
+            style={styles.input}
+            placeholder="Caption"
+            value={caption}
+            onChangeText={setCaption}
+          />
+          <Button mode="contained" onPress={saveEditPost}>
+            Save
+          </Button>
+          <Button mode="contained" onPress={() => setEditModalVisible(false)}>
+            Cancel
+          </Button>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -258,6 +319,10 @@ const styles = StyleSheet.create({
   },
   containerImage: {
     flex: 1 / 3,
+  },
+  postActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   modalView: {
     margin: 20,
