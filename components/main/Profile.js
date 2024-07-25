@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Text, Image, FlatList } from "react-native";
 import { connect } from "react-redux";
-import { Button } from "react-native-paper"; // Button component from React Native Paper
+import { Button } from "react-native-paper"; 
 import { sendFollowNotification } from "../../utils/notifications";
 
-// Your Firebase imports remain unchanged
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 import {
-  getFirestore,
   collection,
   doc,
   setDoc,
@@ -18,13 +14,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import firebaseConfig from "../auth/firebaseConfig";
-import { firebase } from "@react-native-firebase/auth";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+import { db, auth } from "../auth/firebaseConfig";
 
 function Profile(props) {
   const [userPosts, setUserPosts] = useState([]);
@@ -32,7 +22,6 @@ function Profile(props) {
   const [following, setFollowing] = useState(false);
 
   useEffect(() => {
-    // Your existing useEffect code remains unchanged
     const { currentUser, posts } = props;
 
     if (!props.route.params || !props.route.params.uid) {
