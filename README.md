@@ -36,7 +36,7 @@ https://expo.dev/artifacts/eas/nXKXaaitfWmRgngeMsbLC5.apk
     ```
 
 4. **Start the project**:
-        ```sh
+        ```
         npx expo start
         ```
 
